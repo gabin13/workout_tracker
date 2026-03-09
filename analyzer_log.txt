@@ -1,0 +1,15 @@
+Analyzing workout_tracker...
+
+  error - lib\providers\scheduled_workout_provider.dart:7:50 - The method 'findAllAsync' isn't defined for the type 'QueryBuilder'. Try correcting the name to the name of an existing method, or defining a method named 'findAllAsync'. - undefined_method
+  error - lib\services\notification_service.dart:24:31 - The named parameter 'settings' is required, but there's no corresponding argument. Try adding the required argument. - missing_required_argument
+  error - lib\services\notification_service.dart:25:7 - The named parameter 'initializationSettings' isn't defined. Try correcting the name to an existing named parameter's name, or defining a named parameter with the name 'initializationSettings'. - undefined_named_parameter
+  error - lib\services\notification_service.dart:35:31 - The named parameter 'id' is required, but there's no corresponding argument. Try adding the required argument. - missing_required_argument
+  error - lib\services\notification_service.dart:35:31 - The named parameter 'notificationDetails' is required, but there's no corresponding argument. Try adding the required argument. - missing_required_argument
+  error - lib\services\notification_service.dart:35:31 - The named parameter 'scheduledDate' is required, but there's no corresponding argument. Try adding the required argument. - missing_required_argument
+  error - lib\services\notification_service.dart:36:7 - Too many positional arguments: 0 expected, but 5 found. Try removing the extra positional arguments, or specifying the name for named arguments. - extra_positional_arguments_could_be_named
+  error - lib\services\notification_service.dart:51:7 - The named parameter 'uiLocalNotificationDateInterpretation' isn't defined. Try correcting the name to an existing named parameter's name, or defining a named parameter with the name 'uiLocalNotificationDateInterpretation'. - undefined_named_parameter
+  error - lib\services\notification_service.dart:51:46 - Undefined name 'UILocalNotificationDateInterpretation'. Try correcting the name to one that is defined, or defining the name. - undefined_identifier
+  error - lib\services\notification_service.dart:57:31 - The named parameter 'id' is required, but there's no corresponding argument. Try adding the required argument. - missing_required_argument
+  error - lib\services\notification_service.dart:57:38 - Too many positional arguments: 0 expected, but 1 found. Try removing the extra positional arguments, or specifying the name for named arguments. - extra_positional_arguments_could_be_named
+
+11 issues found.

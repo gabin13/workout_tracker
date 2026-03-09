@@ -1,0 +1,38 @@
+[INFO] Generating build script...
+[INFO] Generating build script completed, took 157ms
+
+[WARNING] Invalidated precompiled build script due to missing asset graph.
+[INFO] Precompiling build script......
+[INFO] Precompiling build script... completed, took 807ms
+
+[INFO] Initializing inputs
+[INFO] Building new asset graph...
+[INFO] Building new asset graph completed, took 1.1s
+
+[INFO] Checking for unexpected pre-existing outputs....
+[INFO] Checking for unexpected pre-existing outputs. completed, took 0ms
+
+[INFO] Running build...
+[WARNING] isar_generator on test/widget_test.dart:
+Your current `analyzer` version may not fully support your current SDK version.
+
+Analyzer language version: 3.1.0
+SDK language version: 3.10.0
+
+Please update to the latest `analyzer` version (11.0.0) by running
+`flutter packages upgrade`.
+
+If you are not getting the latest version by running the above command, you
+can try adding a constraint like the following to your pubspec to start
+diagnosing why you can't get the latest version:
+
+dev_dependencies:
+  analyzer: ^11.0.0
+
+[INFO] Running build completed, took 1.1s
+
+[INFO] Caching finalized dependency graph...
+[INFO] Caching finalized dependency graph completed, took 44ms
+
+[INFO] Succeeded after 1.1s with 18 outputs (51 actions)
+
