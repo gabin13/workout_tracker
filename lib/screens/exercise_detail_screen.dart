@@ -9,6 +9,7 @@ import '../providers/exercise_provider.dart';
 import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
 import '../providers/pr_provider.dart';
+import '../shared/constants.dart';
 
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
   final Exercise exercise;
@@ -82,6 +83,10 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
       appBar: AppBar(
         title: Text(widget.exercise.nom),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showEditExerciseDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () => _confirmDeleteExercise(context),
@@ -181,6 +186,52 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Text('Erreur: $err'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditExerciseDialog(BuildContext context) {
+    final nomCtrl = TextEditingController(text: widget.exercise.nom);
+    String? selectedMuscle = widget.exercise.musclePrincipal;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Modifier l\'exercice'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nomCtrl, decoration: const InputDecoration(labelText: 'Nom')),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Muscle principal'),
+                initialValue: selectedMuscle,
+                items: muscleCategories.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                onChanged: (val) => setDialogState(() => selectedMuscle = val),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nomCtrl.text.isNotEmpty && selectedMuscle != null) {
+                  setState(() {
+                    widget.exercise.nom = nomCtrl.text;
+                    widget.exercise.musclePrincipal = selectedMuscle!;
+                  });
+                  await ref.read(databaseProvider).saveExercise(widget.exercise);
+                  ref.invalidate(exercisesProvider);
+                  // Rafraîchir aussi les stats et programmes car le nom/muscle change
+                  ref.invalidate(workoutProgramsProvider);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text('Enregistrer'),
             ),
           ],
         ),

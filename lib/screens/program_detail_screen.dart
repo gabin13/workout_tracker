@@ -76,7 +76,20 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  widget.program.exercises.remove(progEx);
+                                });
+                              },
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
@@ -115,12 +128,76 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                   ),
                 );
               }),
+              const Divider(height: 32),
+              ElevatedButton.icon(
+                onPressed: () => _showAddExerciseSelector(context, allExercises),
+                icon: const Icon(Icons.add),
+                label: const Text('Ajouter un exercice'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                ),
+              ),
+              const SizedBox(height: 32),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Erreur: $err')),
       ),
+    );
+  }
+
+  void _showAddExerciseSelector(BuildContext context, List<Exercise> allExercises) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('Choisir un exercice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    itemCount: allExercises.length,
+                    itemBuilder: (context, index) {
+                      final ex = allExercises[index];
+                      // Optionnel: masquer ceux déjà présents
+                      final isAlreadyIn = widget.program.exercises.any((pe) => pe.exerciseId == ex.id);
+                      
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.grey.shade100,
+                          child: Icon(Icons.fitness_center, color: isAlreadyIn ? Colors.grey : Colors.deepPurpleAccent),
+                        ),
+                        title: Text(ex.nom, style: TextStyle(color: isAlreadyIn ? Colors.grey : Colors.black)),
+                        subtitle: Text(ex.musclePrincipal),
+                        trailing: isAlreadyIn ? const Icon(Icons.check, color: Colors.green) : null,
+                        onTap: isAlreadyIn ? null : () {
+                          setState(() {
+                            widget.program.exercises.add(ProgramExercise()..exerciseId = ex.id);
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
