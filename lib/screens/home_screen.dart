@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
 import '../providers/exercise_provider.dart';
+import '../models/exercise.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -139,9 +140,8 @@ class HomeScreen extends ConsumerWidget {
         ...program.exercises.map<Widget>((progEx) {
           final exercise = allExercises.firstWhere(
             (e) => e.id == progEx.exerciseId,
-            orElse: () => null,
+            orElse: () => Exercise()..nom = 'Exercice supprimé'..musclePrincipal = 'N/A',
           );
-          if (exercise == null) return const SizedBox.shrink();
 
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
