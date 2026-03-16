@@ -149,10 +149,10 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   }) {
     return Card(
       elevation: 0,
-      color: color.withOpacity(0.1),
+      color: color.withAlpha((0.1 * 255).toInt()),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: color.withOpacity(0.3), width: 1),
+        side: BorderSide(color: color.withAlpha((0.3 * 255).toInt()), width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
