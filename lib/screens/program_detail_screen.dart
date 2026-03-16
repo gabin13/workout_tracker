@@ -65,69 +65,97 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
               const Text('Exercices et Objectifs', 
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               const SizedBox(height: 8),
-              ...widget.program.exercises.map((progEx) {
-                final ex = allExercises.firstWhere((e) => e.id == progEx.exerciseId, 
-                    orElse: () => Exercise()..nom = 'Exercice inconnu');
-                
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Theme(
+                data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
+                child: ReorderableListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.program.exercises.length,
+                  onReorder: (oldIndex, newIndex) async {
+                    setState(() {
+                      if (newIndex > oldIndex) newIndex -= 1;
+                      final item = widget.program.exercises.removeAt(oldIndex);
+                      widget.program.exercises.insert(newIndex, item);
+                    });
+                    // Sauvegarde automatique de l'ordre
+                    await ref.read(databaseProvider).saveProgram(widget.program);
+                    ref.invalidate(workoutProgramsProvider);
+                  },
+                  itemBuilder: (context, index) {
+                    final progEx = widget.program.exercises[index];
+                    final ex = allExercises.firstWhere(
+                      (e) => e.id == progEx.exerciseId,
+                      orElse: () => Exercise()..nom = 'Exercice inconnu',
+                    );
+
+                    return Card(
+                      key: ValueKey('prog_ex_${progEx.exerciseId}_$index'),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            IconButton(
-                              icon: const Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  widget.program.exercises.remove(progEx);
-                                });
-                              },
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.drag_handle, color: Colors.grey),
+                                    const SizedBox(width: 8),
+                                    Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                  ],
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      widget.program.exercises.remove(progEx);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: progEx.targetSets?.toString() ?? '',
+                                    keyboardType: TextInputType.number,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Séries à viser',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                    onChanged: (val) {
+                                      progEx.targetSets = int.tryParse(val);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    initialValue: progEx.targetReps ?? '',
+                                    decoration: const InputDecoration(
+                                      labelText: 'Reps (ex: 8-10)',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                    onChanged: (val) {
+                                      progEx.targetReps = val;
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                initialValue: progEx.targetSets?.toString() ?? '',
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Séries à viser',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                                onChanged: (val) {
-                                  progEx.targetSets = int.tryParse(val);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
-                                initialValue: progEx.targetReps ?? '',
-                                decoration: const InputDecoration(
-                                  labelText: 'Reps (ex: 8-10)',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                                onChanged: (val) {
-                                  progEx.targetReps = val;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+                      ),
+                    );
+                  },
+                ),
+              ),
               const Divider(height: 32),
               ElevatedButton.icon(
                 onPressed: () => _showAddExerciseSelector(context, allExercises),
