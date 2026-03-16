@@ -42,7 +42,9 @@ class HealthService {
       // 2. Calories (Aujourd'hui)
       // Note: Pour les calories, on récupère les points de données
       List<HealthDataPoint> caloriesData = await _health.getHealthDataFromTypes(
-        midnight, now, [HealthDataType.ACTIVE_ENERGY_BURNED]
+        types: [HealthDataType.ACTIVE_ENERGY_BURNED],
+        startTime: midnight,
+        endTime: now,
       );
       double totalCalories = 0;
       for (var p in caloriesData) {
@@ -54,7 +56,9 @@ class HealthService {
 
       // 3. Poids (Dernier)
       List<HealthDataPoint> weightData = await _health.getHealthDataFromTypes(
-        now.subtract(const Duration(days: 30)), now, [HealthDataType.WEIGHT]
+        types: [HealthDataType.WEIGHT],
+        startTime: now.subtract(const Duration(days: 30)),
+        endTime: now,
       );
       if (weightData.isNotEmpty) {
         weightData.sort((a, b) => b.dateTo.compareTo(a.dateTo));
@@ -66,7 +70,9 @@ class HealthService {
 
       // 4. Fréquence Cardiaque (Dernière)
       List<HealthDataPoint> hrData = await _health.getHealthDataFromTypes(
-        now.subtract(const Duration(days: 1)), now, [HealthDataType.HEART_RATE]
+        types: [HealthDataType.HEART_RATE],
+        startTime: now.subtract(const Duration(days: 1)),
+        endTime: now,
       );
       if (hrData.isNotEmpty) {
         hrData.sort((a, b) => b.dateTo.compareTo(a.dateTo));
