@@ -30,6 +30,10 @@
 	<string>Cette application nécessite l'accès à la caméra pour enregistrer des photos de progression.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cette application nécessite l'accès à la galerie pour importer des photos de progression.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Nous utiliserons vos données de santé pour afficher vos métriques dans votre tableau de bord.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Nous utiliserons vos données pour synchroniser vos entraînements.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

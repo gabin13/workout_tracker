@@ -3,6 +3,7 @@ import 'home_screen.dart';
 import 'exos_screen.dart';
 import 'planning_screen.dart';
 import 'stats_screen.dart';
+import 'health_screen.dart';
 import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -20,6 +21,7 @@ class _MainScreenState extends State<MainScreen> {
     PlanningScreen(),
     ExosScreen(),
     StatsScreen(),
+    HealthScreen(),
     SettingsScreen(),
   ];
 
@@ -54,6 +56,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.bar_chart_outlined),
             selectedIcon: Icon(Icons.bar_chart),
             label: 'Stats',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_outline),
+            selectedIcon: Icon(Icons.favorite),
+            label: 'Santé',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
