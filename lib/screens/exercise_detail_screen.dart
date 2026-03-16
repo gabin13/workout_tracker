@@ -5,6 +5,10 @@ import '../models/exercise.dart';
 import '../models/exercise_history.dart';
 import '../providers/database_provider.dart';
 import '../providers/history_provider.dart';
+import '../providers/exercise_provider.dart';
+import '../providers/program_provider.dart';
+import '../providers/scheduled_workout_provider.dart';
+import '../providers/pr_provider.dart';
 
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
   final Exercise exercise;
@@ -75,7 +79,15 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     final historyAsync = ref.watch(exerciseHistoryProvider(widget.exercise.id));
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.exercise.nom)),
+      appBar: AppBar(
+        title: Text(widget.exercise.nom),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _confirmDeleteExercise(context),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -172,6 +184,36 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteExercise(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer l\'exercice ?'),
+        content: const Text(
+            'Cela supprimera DEFINITIVEMENT tout l\'historique et les records liés, et le retirera de vos programmes.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(databaseProvider).deleteExercise(widget.exercise.id);
+              
+              // On rafraîchit tout car l'exercice est partout
+              ref.invalidate(exercisesProvider);
+              ref.invalidate(workoutProgramsProvider);
+              ref.invalidate(scheduledWorkoutsProvider);
+              ref.invalidate(personalRecordsProvider(widget.exercise.id));
+              
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

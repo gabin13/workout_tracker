@@ -1,0 +1,17 @@
+const List<String> muscleCategories = [
+  "Pectoraux",
+  "Dos",
+  "Épaules",
+  "Biceps",
+  "Triceps",
+  "Quadriceps",
+  "Ischio-jambiers",
+  "Mollets",
+  "Fessiers",
+  "Abdominaux",
+  "Lombaires",
+  "Trapèzes",
+  "Avant-bras",
+  "Cardio",
+  "Corps entier",
+];

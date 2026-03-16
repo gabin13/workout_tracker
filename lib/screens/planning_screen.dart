@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/scheduled_workout_provider.dart';
+import '../providers/program_provider.dart';
 import '../providers/database_provider.dart';
 import '../models/scheduled_workout.dart';
 
@@ -19,6 +20,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
   @override
   Widget build(BuildContext context) {
     final scheduledAsync = ref.watch(scheduledWorkoutsProvider);
+    final programsAsync = ref.watch(workoutProgramsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Planning')),
@@ -69,19 +71,22 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                         .where((s) => _selectedDay != null && isSameDay(s.datePrevue, _selectedDay!))
                         .toList();
                     final event = events[index];
-                    return ListTile(
-                      leading: Icon(
-                        event.isCompleted ? Icons.check_circle : Icons.schedule,
-                        color: event.isCompleted ? Colors.green : Colors.deepPurpleAccent,
-                      ),
-                      title: Text('Programme #${event.workoutProgramId}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () async {
-                          await ref.read(databaseProvider).deleteScheduledSession(event.id);
-                          ref.invalidate(scheduledWorkoutsProvider);
-                        },
-                      ),
+                    return programsAsync.maybeWhen(
+                      data: (programs) {
+                        final program = programs.where((p) => p.id == event.workoutProgramId).firstOrNull;
+                        return ListTile(
+                          leading: Icon(
+                            event.isCompleted ? Icons.check_circle : Icons.schedule,
+                            color: event.isCompleted ? Colors.green : Colors.deepPurpleAccent,
+                          ),
+                          title: Text(program?.nom ?? 'Programme inconnu'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _confirmDeleteSession(context, event),
+                          ),
+                        );
+                      },
+                      orElse: () => const ListTile(title: Text('Chargement...')),
                     );
                   },
                 ),
@@ -127,7 +132,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                 ...programs.map((p) => ListTile(
                       leading: const Icon(Icons.list_alt),
                       title: Text(p.nom),
-                      subtitle: Text('${p.exerciceIds.length} exercice(s)'),
+                      subtitle: Text('${p.exercises.length} exercice(s)'),
                       onTap: () async {
                         final session = ScheduledWorkout()
                           ..datePrevue = day
@@ -142,6 +147,27 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _confirmDeleteSession(BuildContext context, ScheduledWorkout session) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer cette séance ?'),
+        content: const Text('Voulez-vous retirer cette séance de votre planning ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(databaseProvider).deleteScheduledSession(session.id);
+              ref.invalidate(scheduledWorkoutsProvider);
+            },
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
     );
   }
 }

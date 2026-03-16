@@ -45,7 +45,22 @@ class DatabaseService {
 
   Future<void> deleteExercise(int id) async {
     await isar.writeTxn(() async {
+      // 1. Supprimer l'exercice lui-même
       await isar.exercises.delete(id);
+      
+      // 2. Supprimer tout son historique et Records personnels
+      await isar.exerciseHistorys.filter().exerciseIdEqualTo(id).deleteAll();
+      await isar.personalRecords.filter().exerciseIdEqualTo(id).deleteAll();
+      
+      // 3. Le retirer de tous les programmes qui l'utilisent
+      final programs = await isar.workoutPrograms.where().findAll();
+      for (var p in programs) {
+        final initialLength = p.exercises.length;
+        p.exercises.removeWhere((e) => e.exerciseId == id);
+        if (p.exercises.length != initialLength) {
+          await isar.workoutPrograms.put(p);
+        }
+      }
     });
   }
 
@@ -70,7 +85,17 @@ class DatabaseService {
 
   Future<void> deleteProgram(int id) async {
     await isar.writeTxn(() async {
+      // 1. Supprimer le programme
       await isar.workoutPrograms.delete(id);
+      
+      // 2. Supprimer les séances planifiées FUTURES liées à ce programme
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await isar.scheduledWorkouts
+          .filter()
+          .workoutProgramIdEqualTo(id)
+          .datePrevueGreaterThan(today.subtract(const Duration(seconds: 1)))
+          .deleteAll();
     });
   }
 

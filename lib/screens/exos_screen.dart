@@ -5,7 +5,10 @@ import '../providers/program_provider.dart';
 import '../models/exercise.dart';
 import '../models/workout_program.dart';
 import '../providers/database_provider.dart';
+import '../shared/constants.dart';
+import '../providers/scheduled_workout_provider.dart';
 import 'exercise_detail_screen.dart';
+import 'program_detail_screen.dart';
 
 class ExosScreen extends ConsumerStatefulWidget {
   const ExosScreen({super.key});
@@ -107,38 +110,46 @@ class _ExercisesTab extends ConsumerWidget {
 
   void _showAddExerciseDialog(BuildContext context, WidgetRef ref) {
     final nomCtrl = TextEditingController();
-    final muscleCtrl = TextEditingController();
+    String? selectedMuscle;
     final notesCtrl = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Nouvel Exercice'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nomCtrl, decoration: const InputDecoration(labelText: 'Nom')),
-            TextField(controller: muscleCtrl, decoration: const InputDecoration(labelText: 'Muscle principal')),
-            TextField(controller: notesCtrl, decoration: const InputDecoration(labelText: 'Notes / Réglages machine')),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Nouvel Exercice'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: nomCtrl, decoration: const InputDecoration(labelText: 'Nom')),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Muscle principal'),
+                initialValue: selectedMuscle,
+                items: muscleCategories.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                onChanged: (val) => setDialogState(() => selectedMuscle = val),
+              ),
+              TextField(controller: notesCtrl, decoration: const InputDecoration(labelText: 'Notes / Réglages machine')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nomCtrl.text.isNotEmpty && selectedMuscle != null) {
+                  final ex = Exercise()
+                    ..nom = nomCtrl.text
+                    ..musclePrincipal = selectedMuscle!
+                    ..notesReglagesMachine = notesCtrl.text.isEmpty ? null : notesCtrl.text;
+                  await ref.read(databaseProvider).saveExercise(ex);
+                  ref.invalidate(exercisesProvider);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text('Ajouter'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-          ElevatedButton(
-            onPressed: () async {
-              if (nomCtrl.text.isNotEmpty && muscleCtrl.text.isNotEmpty) {
-                final ex = Exercise()
-                  ..nom = nomCtrl.text
-                  ..musclePrincipal = muscleCtrl.text
-                  ..notesReglagesMachine = notesCtrl.text.isEmpty ? null : notesCtrl.text;
-                await ref.read(databaseProvider).saveExercise(ex);
-                ref.invalidate(exercisesProvider);
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: const Text('Ajouter'),
-          ),
-        ],
       ),
     );
   }
@@ -167,14 +178,19 @@ class _ProgrammesTab extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.list_alt, color: Colors.deepPurpleAccent),
                 title: Text(p.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('${p.exerciceIds.length} exercice(s)'),
+                subtitle: Text('${p.exercises.length} exercice(s)'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () async {
-                    await ref.read(databaseProvider).deleteProgram(p.id);
-                    ref.invalidate(workoutProgramsProvider);
-                  },
+                  onPressed: () => _confirmDeleteProgram(context, ref, p),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProgramDetailScreen(program: p),
+                    ),
+                  );
+                },
               );
             },
           );
@@ -186,6 +202,29 @@ class _ProgrammesTab extends ConsumerWidget {
         heroTag: 'add_program',
         onPressed: () => _showAddProgramDialog(context, ref),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _confirmDeleteProgram(BuildContext context, WidgetRef ref, WorkoutProgram program) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer ce programme ?'),
+        content: const Text('Cela supprimera également toutes les séances planifiées futures pour ce programme.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(databaseProvider).deleteProgram(program.id);
+              ref.invalidate(workoutProgramsProvider);
+              ref.invalidate(scheduledWorkoutsProvider);
+            },
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -243,7 +282,7 @@ class _ProgrammesTab extends ConsumerWidget {
                 if (nomCtrl.text.isNotEmpty && selectedIds.isNotEmpty) {
                   final p = WorkoutProgram()
                     ..nom = nomCtrl.text
-                    ..exerciceIds = selectedIds;
+                    ..exercises = selectedIds.map((id) => ProgramExercise()..exerciseId = id).toList();
                   await ref.read(databaseProvider).saveProgram(p);
                   ref.invalidate(workoutProgramsProvider);
                   if (context.mounted) Navigator.pop(context);

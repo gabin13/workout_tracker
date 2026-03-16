@@ -47,8 +47,8 @@ class BackupService {
       
       await file.writeAsString(jsonString);
       
-      // Utilisation de Share.shareXFiles (vérification du package share_plus 12.0)
-      await Share.shareXFiles([XFile(file.path)], text: 'Ma sauvegarde Workout Tracker');
+      // Partager le fichier
+      await Share.shareXFiles([XFile(file.path)], text: 'Sauvegarde Workout Tracker');
     } catch (e) {
       rethrow;
     }
