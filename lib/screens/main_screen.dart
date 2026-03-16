@@ -4,6 +4,7 @@ import 'exos_screen.dart';
 import 'planning_screen.dart';
 import 'stats_screen.dart';
 import 'health_screen.dart';
+import 'nutrition_screen.dart';
 import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     ExosScreen(),
     StatsScreen(),
     HealthScreen(),
+    NutritionScreen(),
     SettingsScreen(),
   ];
 
@@ -61,6 +63,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.favorite_outline),
             selectedIcon: Icon(Icons.favorite),
             label: 'Santé',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.restaurant_outlined),
+            selectedIcon: Icon(Icons.restaurant),
+            label: 'Nutrition',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

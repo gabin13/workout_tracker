@@ -8,6 +8,7 @@ import '../models/scheduled_workout.dart';
 import '../models/workout_program.dart';
 import '../models/exercise_history.dart';
 import '../models/personal_record.dart';
+import '../models/nutrition.dart';
 
 class DatabaseService {
   late Isar isar;
@@ -25,6 +26,9 @@ class DatabaseService {
         WorkoutProgramSchema,
         ExerciseHistorySchema,
         PersonalRecordSchema,
+        NutritionGoalSchema,
+        DailyNutritionLogSchema,
+        MealEntrySchema,
       ],
       directory: dir.path,
     );

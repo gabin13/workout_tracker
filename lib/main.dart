@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/database_service.dart';
 import 'services/notification_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'screens/main_screen.dart';
 
@@ -14,6 +15,7 @@ void main() async {
   
   await databaseService.initialize();
   await notificationService.initialize();
+  await initializeDateFormatting('fr_FR', null);
 
   runApp(
     const ProviderScope(
