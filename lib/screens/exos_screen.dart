@@ -9,6 +9,7 @@ import '../shared/constants.dart';
 import '../providers/scheduled_workout_provider.dart';
 import 'exercise_detail_screen.dart';
 import 'program_detail_screen.dart';
+import 'settings_screen.dart';
 
 class ExosScreen extends ConsumerStatefulWidget {
   const ExosScreen({super.key});
@@ -38,6 +39,17 @@ class _ExosScreenState extends ConsumerState<ExosScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exercices & Programmes'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

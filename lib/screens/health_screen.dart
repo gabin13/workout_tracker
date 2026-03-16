@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/health_service.dart';
+import 'settings_screen.dart';
 
 final healthServiceProvider = Provider((ref) => HealthService());
 
@@ -53,7 +54,20 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
 
     if (!_isAuthorized) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Santé')),
+        appBar: AppBar(
+          title: const Text('Santé'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
+            ),
+          ],
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -95,6 +109,15 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _checkPermissionsAndFetch,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
           ),
         ],
       ),

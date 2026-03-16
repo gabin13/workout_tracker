@@ -4,6 +4,7 @@ import '../providers/exercise_provider.dart';
 import '../providers/pr_provider.dart';
 import '../shared/constants.dart';
 import 'pr_history_screen.dart';
+import 'settings_screen.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
   const StatsScreen({super.key});
@@ -28,7 +29,20 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final exercisesAsync = ref.watch(exercisesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Records Personnels (PR)')),
+      appBar: AppBar(
+        title: const Text('Records Personnels (PR)'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // Barre de recherche

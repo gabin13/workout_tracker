@@ -5,6 +5,7 @@ import '../providers/scheduled_workout_provider.dart';
 import '../providers/program_provider.dart';
 import '../providers/database_provider.dart';
 import '../models/scheduled_workout.dart';
+import 'settings_screen.dart';
 
 class PlanningScreen extends ConsumerStatefulWidget {
   const PlanningScreen({super.key});
@@ -23,7 +24,20 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
     final programsAsync = ref.watch(workoutProgramsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Planning')),
+      appBar: AppBar(
+        title: const Text('Planning'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: scheduledAsync.when(
         data: (scheduledList) {
           return Column(

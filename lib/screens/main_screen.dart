@@ -5,7 +5,6 @@ import 'planning_screen.dart';
 import 'stats_screen.dart';
 import 'health_screen.dart';
 import 'nutrition_screen.dart';
-import 'settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,7 +23,6 @@ class _MainScreenState extends State<MainScreen> {
     StatsScreen(),
     HealthScreen(),
     NutritionScreen(),
-    SettingsScreen(),
   ];
 
   @override
@@ -68,11 +66,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.restaurant_outlined),
             selectedIcon: Icon(Icons.restaurant),
             label: 'Nutrition',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Réglages',
           ),
         ],
       ),

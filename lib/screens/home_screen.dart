@@ -5,6 +5,7 @@ import '../providers/scheduled_workout_provider.dart';
 import '../providers/exercise_provider.dart';
 import '../models/exercise.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,17 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Workout Dashboard'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
