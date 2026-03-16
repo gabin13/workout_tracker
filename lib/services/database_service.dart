@@ -1,5 +1,12 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import '../models/exercise.dart';
+import '../models/workout_program.dart';
+import '../models/scheduled_workout.dart';
+import '../models/exercise_history.dart';
+import '../models/personal_record.dart';
+import '../models/nutrition.dart';
+import '../models/body_measurement.dart';
 
 import '../models/exercise.dart';
 import '../models/workout.dart';
@@ -29,6 +36,7 @@ class DatabaseService {
         NutritionGoalSchema,
         DailyNutritionLogSchema,
         MealEntrySchema,
+        BodyMeasurementSchema, // Added BodyMeasurementSchema
       ],
       directory: dir.path,
     );
@@ -177,5 +185,19 @@ class DatabaseService {
       // On garde les tables legacy au cas où
       await isar.workouts.clear();
     });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // HEALTH & MEASUREMENTS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  Future<void> saveMeasurement(BodyMeasurement measurement) async {
+    await isar.writeTxn(() async {
+      await isar.bodyMeasurements.put(measurement);
+    });
+  }
+
+  Future<List<BodyMeasurement>> getAllMeasurements() async {
+    return await isar.bodyMeasurements.where().findAll();
   }
 }

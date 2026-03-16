@@ -8,6 +8,7 @@ class BodyMeasurement {
 
   late DateTime date;
   late double poids;
+  double? taille; // en cm
   double? tourBras;
   double? tourTaille;
   double? tourCuisses;

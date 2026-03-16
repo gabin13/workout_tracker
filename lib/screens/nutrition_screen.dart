@@ -25,6 +25,10 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
         centerTitle: true,
         actions: [
           IconButton(
+            icon: const Icon(Icons.tune),
+            onPressed: () => _showGoalsForm(context, ref),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
               Navigator.push(
@@ -373,6 +377,78 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
         labelText: label,
         suffixText: suffix,
         border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
+  void _showGoalsForm(BuildContext context, WidgetRef ref) async {
+    final goal = await ref.read(nutritionGoalProvider.future);
+    if (!context.mounted) return;
+
+    final kcalController = TextEditingController(text: goal.calories.toString());
+    final protController = TextEditingController(text: goal.proteines.toString());
+    final glucController = TextEditingController(text: goal.glucides.toString());
+    final lipController = TextEditingController(text: goal.lipides.toString());
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Objectifs Quotidiens',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                   Expanded(child: _buildNumField(kcalController, 'Calories', 'kcal')),
+                   const SizedBox(width: 12),
+                   Expanded(child: _buildNumField(protController, 'Protéines', 'g')),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                   Expanded(child: _buildNumField(glucController, 'Glucides', 'g')),
+                   const SizedBox(width: 12),
+                   Expanded(child: _buildNumField(lipController, 'Lipides', 'g')),
+                ],
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  goal.calories = int.tryParse(kcalController.text) ?? goal.calories;
+                  goal.proteines = int.tryParse(protController.text) ?? goal.proteines;
+                  goal.glucides = int.tryParse(glucController.text) ?? goal.glucides;
+                  goal.lipides = int.tryParse(lipController.text) ?? goal.lipides;
+
+                  await ref.read(nutritionServiceProvider).updateGoal(goal);
+                  ref.invalidate(nutritionGoalProvider);
+                  if (context.mounted) Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Enregistrer'),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
       ),
     );
   }

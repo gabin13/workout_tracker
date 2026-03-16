@@ -5,8 +5,6 @@ import '../providers/database_provider.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
-import '../providers/nutrition_provider.dart';
-import '../models/nutrition.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -23,8 +21,6 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildNutritionSection(context, ref),
-          const SizedBox(height: 32),
           _buildSectionHeader('Sécurité & Sauvegarde'),
           Card(
             child: Column(
@@ -78,74 +74,6 @@ class SettingsScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNutritionSection(BuildContext context, WidgetRef ref) {
-    final goalAsync = ref.watch(nutritionGoalProvider);
-
-    return goalAsync.when(
-      data: (goal) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionHeader('Objectifs Nutritionnels'),
-          Card(
-            child: Column(
-              children: [
-                _buildGoalTile(context, ref, goal, 'Calories', '${goal.calories} kcal', Icons.local_fire_department, (val) => goal.calories = val),
-                 const Divider(height: 1),
-                _buildGoalTile(context, ref, goal, 'Protéines', '${goal.proteines} g', Icons.egg_alt_outlined, (val) => goal.proteines = val),
-                 const Divider(height: 1),
-                _buildGoalTile(context, ref, goal, 'Glucides', '${goal.glucides} g', Icons.bakery_dining_outlined, (val) => goal.glucides = val),
-                 const Divider(height: 1),
-                _buildGoalTile(context, ref, goal, 'Lipides', '${goal.lipides} g', Icons.opacity, (val) => goal.lipides = val),
-              ],
-            ),
-          ),
-        ],
-      ),
-      loading: () => const CircularProgressIndicator(),
-      error: (e, s) => Text('Erreur objectifs: $e'),
-    );
-  }
-
-  Widget _buildGoalTile(BuildContext context, WidgetRef ref, NutritionGoal goal, String title, String value, IconData icon, Function(int) onUpdate) {
-    return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title),
-      trailing: Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-      onTap: () => _editGoalValue(context, ref, goal, title, onUpdate),
-    );
-  }
-
-  void _editGoalValue(BuildContext context, WidgetRef ref, NutritionGoal goal, String title, Function(int) onUpdate) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Modifier $title'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          decoration: InputDecoration(hintText: 'Nouvelle valeur pour $title'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
-          ElevatedButton(
-            onPressed: () async {
-              final newValue = int.tryParse(controller.text);
-              if (newValue != null) {
-                onUpdate(newValue);
-                await ref.read(nutritionServiceProvider).updateGoal(goal);
-                ref.invalidate(nutritionGoalProvider);
-              }
-              if (context.mounted) Navigator.pop(ctx);
-            },
-            child: const Text('Enregistrer'),
           ),
         ],
       ),

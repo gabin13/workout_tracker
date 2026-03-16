@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'exos_screen.dart';
 import 'planning_screen.dart';
-import 'stats_screen.dart';
 import 'health_screen.dart';
 import 'nutrition_screen.dart';
 
@@ -20,7 +19,6 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     PlanningScreen(),
     ExosScreen(),
-    StatsScreen(),
     HealthScreen(),
     NutritionScreen(),
   ];
@@ -51,11 +49,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.fitness_center_outlined),
             selectedIcon: Icon(Icons.fitness_center),
             label: 'Exos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Stats',
           ),
           NavigationDestination(
             icon: Icon(Icons.favorite_outline),

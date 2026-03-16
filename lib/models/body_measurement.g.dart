@@ -27,18 +27,23 @@ const BodyMeasurementSchema = CollectionSchema(
       name: r'poids',
       type: IsarType.double,
     ),
-    r'tourBras': PropertySchema(
+    r'taille': PropertySchema(
       id: 2,
+      name: r'taille',
+      type: IsarType.double,
+    ),
+    r'tourBras': PropertySchema(
+      id: 3,
       name: r'tourBras',
       type: IsarType.double,
     ),
     r'tourCuisses': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'tourCuisses',
       type: IsarType.double,
     ),
     r'tourTaille': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'tourTaille',
       type: IsarType.double,
     )
@@ -74,9 +79,10 @@ void _bodyMeasurementSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.date);
   writer.writeDouble(offsets[1], object.poids);
-  writer.writeDouble(offsets[2], object.tourBras);
-  writer.writeDouble(offsets[3], object.tourCuisses);
-  writer.writeDouble(offsets[4], object.tourTaille);
+  writer.writeDouble(offsets[2], object.taille);
+  writer.writeDouble(offsets[3], object.tourBras);
+  writer.writeDouble(offsets[4], object.tourCuisses);
+  writer.writeDouble(offsets[5], object.tourTaille);
 }
 
 BodyMeasurement _bodyMeasurementDeserialize(
@@ -89,9 +95,10 @@ BodyMeasurement _bodyMeasurementDeserialize(
   object.date = reader.readDateTime(offsets[0]);
   object.id = id;
   object.poids = reader.readDouble(offsets[1]);
-  object.tourBras = reader.readDoubleOrNull(offsets[2]);
-  object.tourCuisses = reader.readDoubleOrNull(offsets[3]);
-  object.tourTaille = reader.readDoubleOrNull(offsets[4]);
+  object.taille = reader.readDoubleOrNull(offsets[2]);
+  object.tourBras = reader.readDoubleOrNull(offsets[3]);
+  object.tourCuisses = reader.readDoubleOrNull(offsets[4]);
+  object.tourTaille = reader.readDoubleOrNull(offsets[5]);
   return object;
 }
 
@@ -111,6 +118,8 @@ P _bodyMeasurementDeserializeProp<P>(
     case 3:
       return (reader.readDoubleOrNull(offset)) as P;
     case 4:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 5:
       return (reader.readDoubleOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -381,6 +390,90 @@ extension BodyMeasurementQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'poids',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'taille',
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'taille',
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'taille',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'taille',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'taille',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterFilterCondition>
+      tailleBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'taille',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -677,6 +770,19 @@ extension BodyMeasurementQuerySortBy
     });
   }
 
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy> sortByTaille() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taille', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy>
+      sortByTailleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taille', Sort.desc);
+    });
+  }
+
   QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy>
       sortByTourBras() {
     return QueryBuilder.apply(this, (query) {
@@ -760,6 +866,19 @@ extension BodyMeasurementQuerySortThenBy
     });
   }
 
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy> thenByTaille() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taille', Sort.asc);
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy>
+      thenByTailleDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'taille', Sort.desc);
+    });
+  }
+
   QueryBuilder<BodyMeasurement, BodyMeasurement, QAfterSortBy>
       thenByTourBras() {
     return QueryBuilder.apply(this, (query) {
@@ -817,6 +936,12 @@ extension BodyMeasurementQueryWhereDistinct
     });
   }
 
+  QueryBuilder<BodyMeasurement, BodyMeasurement, QDistinct> distinctByTaille() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'taille');
+    });
+  }
+
   QueryBuilder<BodyMeasurement, BodyMeasurement, QDistinct>
       distinctByTourBras() {
     return QueryBuilder.apply(this, (query) {
@@ -856,6 +981,12 @@ extension BodyMeasurementQueryProperty
   QueryBuilder<BodyMeasurement, double, QQueryOperations> poidsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'poids');
+    });
+  }
+
+  QueryBuilder<BodyMeasurement, double?, QQueryOperations> tailleProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'taille');
     });
   }
 

@@ -9,6 +9,7 @@ import '../providers/exercise_provider.dart';
 import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
 import '../providers/pr_provider.dart';
+import 'pr_history_screen.dart';
 import '../shared/constants.dart';
 
 class ExerciseDetailScreen extends ConsumerStatefulWidget {
@@ -77,7 +78,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final historyAsync = ref.watch(exerciseHistoryProvider(widget.exercise.id));
+    final prsAsync = ref.watch(personalRecordsProvider(widget.exercise.id));
 
     return Scaffold(
       appBar: AppBar(
@@ -93,102 +94,200 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Réglages / Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _notesController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Ex: Hauteur siège 3, position pieds…',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Performance du jour', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            ...List.generate(_currentSeries.length, (index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(radius: 14, child: Text('${index + 1}')),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Poids (kg)', border: OutlineInputBorder()),
-                        onChanged: (val) => _currentSeries[index]['poids'] = double.tryParse(val) ?? 0,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Reps', border: OutlineInputBorder()),
-                        onChanged: (val) => _currentSeries[index]['reps'] = double.tryParse(val) ?? 0,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                      onPressed: () => _removeSerie(index),
-                    ),
-                  ],
+      body: Column(
+        children: [
+          _buildPRBanner(context, ref, prsAsync),
+          Expanded(
+            child: _buildViewMode(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPRBanner(BuildContext context, WidgetRef ref, AsyncValue<List<dynamic>> prsAsync) {
+    return prsAsync.when(
+      data: (prs) {
+        double maxWeight = 0;
+        int maxReps = 0;
+        
+        for (var pr in prs) {
+          if (pr.poidsMax > maxWeight) {
+            maxWeight = pr.poidsMax;
+            maxReps = pr.reps;
+          }
+        }
+
+        final bool hasPR = maxWeight > 0;
+
+        return Card(
+          margin: const EdgeInsets.all(16),
+          color: Theme.of(context).colorScheme.primaryContainer,
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PRHistoryScreen(
+                    exerciseId: widget.exercise.id,
+                    exerciseNom: widget.exercise.nom,
+                  ),
                 ),
               );
-            }),
-            TextButton.icon(
-              onPressed: _addSerie,
-              icon: const Icon(Icons.add),
-              label: const Text('Ajouter une série'),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _saveSession,
-                icon: const Icon(Icons.save),
-                label: const Text('Enregistrer la séance'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurpleAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withAlpha(50),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.emoji_events, color: Colors.amber, size: 32),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Record Personnel Actuel',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        if (hasPR)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '${maxWeight.toStringAsFixed(maxWeight % 1 == 0 ? 0 : 1)} kg',
+                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('pour $maxReps reps', style: TextStyle(color: Colors.grey[700])),
+                            ],
+                          )
+                        else
+                          Text('Aucun record établi', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
+                ],
               ),
             ),
-            const Divider(height: 48),
-            const Text('Historique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            historyAsync.when(
-              data: (history) {
-                if (history.isEmpty) return const Text('Aucun historique pour le moment.');
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: history.length,
-                  itemBuilder: (context, index) {
-                    final item = history[index];
-                    final List<dynamic> series = jsonDecode(item.series);
-                    return Card(
-                      child: ListTile(
-                        title: Text('${item.date.day}/${item.date.month}/${item.date.year}'),
-                        subtitle: Text(
-                          series.map((s) => '${s['poids']}kg x ${s['reps']}').join(' | '),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Text('Erreur: $err'),
+          ),
+        );
+      },
+      loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+      error: (e, s) => const SizedBox(),
+    );
+  }
+
+  Widget _buildViewMode(BuildContext context) {
+    final historyAsync = ref.watch(exerciseHistoryProvider(widget.exercise.id));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), // Adjusted padding
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Réglages / Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _notesController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Ex: Hauteur siège 3, position pieds…',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Performance du jour', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 8),
+          ...List.generate(_currentSeries.length, (index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Row(
+                children: [
+                  CircleAvatar(radius: 14, child: Text('${index + 1}')),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Poids (kg)', border: OutlineInputBorder()),
+                      onChanged: (val) => _currentSeries[index]['poids'] = double.tryParse(val) ?? 0,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Reps', border: OutlineInputBorder()),
+                      onChanged: (val) => _currentSeries[index]['reps'] = double.tryParse(val) ?? 0,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                    onPressed: () => _removeSerie(index),
+                  ),
+                ],
+              ),
+            );
+          }),
+          TextButton.icon(
+            onPressed: _addSerie,
+            icon: const Icon(Icons.add),
+            label: const Text('Ajouter une série'),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _saveSession,
+              icon: const Icon(Icons.save),
+              label: const Text('Enregistrer la séance'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurpleAccent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const Divider(height: 48),
+          const Text('Historique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          const SizedBox(height: 8),
+          historyAsync.when(
+            data: (history) {
+              if (history.isEmpty) return const Text('Aucun historique pour le moment.');
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: history.length,
+                itemBuilder: (context, index) {
+                  final item = history[index];
+                  final List<dynamic> series = jsonDecode(item.series);
+                  return Card(
+                    child: ListTile(
+                      title: Text('${item.date.day}/${item.date.month}/${item.date.year}'),
+                      subtitle: Text(
+                        series.map((s) => '${s['poids']}kg x ${s['reps']}').join(' | '),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Text('Erreur: $err'),
+          ),
+        ],
       ),
     );
   }
