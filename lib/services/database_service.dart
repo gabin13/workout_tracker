@@ -135,4 +135,18 @@ class DatabaseService {
   Future<List<Workout>> getAllWorkouts() async {
     return await isar.workouts.where().sortByDateDesc().findAll();
   }
+
+  // ─── Danger Zone ──────────────────────────────────────────────────────────
+
+  Future<void> clearAll() async {
+    await isar.writeTxn(() async {
+      await isar.exercises.clear();
+      await isar.workoutPrograms.clear();
+      await isar.scheduledWorkouts.clear();
+      await isar.exerciseHistorys.clear();
+      await isar.personalRecords.clear();
+      // On garde les tables legacy au cas où
+      await isar.workouts.clear();
+    });
+  }
 }

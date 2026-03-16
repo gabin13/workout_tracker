@@ -8,4 +8,19 @@ class WorkoutProgram {
 
   late String nom;
   List<int> exerciceIds = [];
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'nom': nom,
+      'exerciceIds': exerciceIds,
+    };
+  }
+
+  static WorkoutProgram fromMap(Map<String, dynamic> map) {
+    return WorkoutProgram()
+      ..id = map['id'] ?? Isar.autoIncrement
+      ..nom = map['nom']
+      ..exerciceIds = List<int>.from(map['exerciceIds'] ?? []);
+  }
 }

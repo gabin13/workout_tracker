@@ -2,8 +2,6 @@ import 'package:isar/isar.dart';
 
 part 'personal_record.g.dart';
 
-/// Un record personnel pour un exercice donné.
-/// Chaque entrée est indépendante → historique de progression.
 @collection
 class PersonalRecord {
   Id id = Isar.autoIncrement;
@@ -11,4 +9,21 @@ class PersonalRecord {
   late int exerciseId;
   late double poidsMax;
   late DateTime date;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'exerciseId': exerciseId,
+      'poidsMax': poidsMax,
+      'date': date.toIso8601String(),
+    };
+  }
+
+  static PersonalRecord fromMap(Map<String, dynamic> map) {
+    return PersonalRecord()
+      ..id = map['id'] ?? Isar.autoIncrement
+      ..exerciseId = map['exerciseId']
+      ..poidsMax = map['poidsMax']
+      ..date = DateTime.parse(map['date']);
+  }
 }
