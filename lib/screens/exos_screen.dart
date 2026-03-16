@@ -60,45 +60,124 @@ class _ExosScreenState extends ConsumerState<ExosScreen>
 // ─────────────────────────────────────────────────────────────────────────────
 // Sous-onglet Exercices
 // ─────────────────────────────────────────────────────────────────────────────
-class _ExercisesTab extends ConsumerWidget {
+class _ExercisesTab extends ConsumerStatefulWidget {
   const _ExercisesTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ExercisesTab> createState() => _ExercisesTabState();
+}
+
+class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
+  String _searchQuery = '';
+  String _selectedMuscle = 'Tous';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final exercisesAsync = ref.watch(exercisesProvider);
 
     return Scaffold(
-      body: exercisesAsync.when(
-        data: (exercises) {
-          if (exercises.isEmpty) {
-            return const Center(child: Text('Aucun exercice. Ajoutez-en un !'));
-          }
-          return ListView.builder(
-            itemCount: exercises.length,
-            itemBuilder: (context, index) {
-              final ex = exercises[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  child: const Icon(Icons.fitness_center),
-                ),
-                title: Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(ex.musclePrincipal),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ExerciseDetailScreen(exercise: ex),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Erreur: $err')),
+      body: Column(
+        children: [
+          // Barre de recherche
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Rechercher un exercice...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchController.clear();
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                isDense: true,
+              ),
+              onChanged: (val) => setState(() => _searchQuery = val),
+            ),
+          ),
+          // Filtres par muscle
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: muscleCategories.length + 1,
+              itemBuilder: (context, index) {
+                final muscle = index == 0 ? 'Tous' : muscleCategories[index - 1];
+                final isSelected = _selectedMuscle == muscle;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    label: Text(muscle),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _selectedMuscle = muscle);
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+          const Divider(height: 1),
+          // Liste
+          Expanded(
+            child: exercisesAsync.when(
+              data: (exercises) {
+                // Application des filtres
+                final filtered = exercises.where((ex) {
+                  final matchesSearch = ex.nom.toLowerCase().contains(_searchQuery.toLowerCase());
+                  final matchesMuscle = _selectedMuscle == 'Tous' || ex.musclePrincipal == _selectedMuscle;
+                  return matchesSearch && matchesMuscle;
+                }).toList();
+
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('Aucun exercice trouvé.'));
+                }
+
+                return ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final ex = filtered[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        child: const Icon(Icons.fitness_center),
+                      ),
+                      title: Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(ex.musclePrincipal),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ExerciseDetailScreen(exercise: ex),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Erreur: $err')),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_exercise',
