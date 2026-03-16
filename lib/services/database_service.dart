@@ -5,8 +5,8 @@ import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../models/workout_set.dart';
 import '../models/scheduled_workout.dart';
-import '../models/body_measurement.dart';
-import '../models/progress_photo.dart';
+import '../models/workout_program.dart';
+import '../models/exercise_history.dart';
 import '../models/personal_record.dart';
 
 class DatabaseService {
@@ -18,20 +18,21 @@ class DatabaseService {
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
       [
-        ExerciseSchema, 
-        WorkoutSchema, 
+        ExerciseSchema,
+        WorkoutSchema,
         WorkoutSetSchema,
         ScheduledWorkoutSchema,
-        BodyMeasurementSchema,
-        ProgressPhotoSchema,
-        PersonalRecordSchema
+        WorkoutProgramSchema,
+        ExerciseHistorySchema,
+        PersonalRecordSchema,
       ],
       directory: dir.path,
     );
     _isInitialized = true;
   }
 
-  // --- Exercises ---
+  // ─── Exercises ─────────────────────────────────────────────────────────────
+
   Future<List<Exercise>> getAllExercises() async {
     return await isar.exercises.where().findAll();
   }
@@ -55,49 +56,83 @@ class DatabaseService {
         .findAll();
   }
 
-  // --- Workouts ---
-  Future<List<Workout>> getAllWorkouts() async {
-    return await isar.workouts.where().sortByDateDesc().findAll();
+  // ─── WorkoutProgram ────────────────────────────────────────────────────────
+
+  Future<List<WorkoutProgram>> getAllPrograms() async {
+    return await isar.workoutPrograms.where().findAll();
   }
 
-  Future<void> saveWorkout(Workout workout) async {
+  Future<void> saveProgram(WorkoutProgram program) async {
     await isar.writeTxn(() async {
-      await isar.workouts.put(workout);
+      await isar.workoutPrograms.put(program);
     });
   }
 
-  Future<void> deleteWorkout(int id) async {
+  Future<void> deleteProgram(int id) async {
     await isar.writeTxn(() async {
-      await isar.workouts.delete(id);
-      // Delete associated workout sets
-      await isar.workoutSets.filter().workoutIdEqualTo(id).deleteAll();
+      await isar.workoutPrograms.delete(id);
     });
   }
 
-  // --- Workout Sets ---
-  Future<List<WorkoutSet>> getSetsForWorkout(int workoutId) async {
-    return await isar.workoutSets
-        .filter()
-        .workoutIdEqualTo(workoutId)
-        .findAll();
+  // ─── ScheduledWorkout ──────────────────────────────────────────────────────
+
+  Future<List<ScheduledWorkout>> getAllScheduledSessions() async {
+    return await isar.scheduledWorkouts.where().findAll();
   }
-  
-  Future<List<WorkoutSet>> getSetsForExercise(int exerciseId) async {
-    return await isar.workoutSets
+
+  Future<void> saveScheduledSession(ScheduledWorkout session) async {
+    await isar.writeTxn(() async {
+      await isar.scheduledWorkouts.put(session);
+    });
+  }
+
+  Future<void> deleteScheduledSession(int id) async {
+    await isar.writeTxn(() async {
+      await isar.scheduledWorkouts.delete(id);
+    });
+  }
+
+  // ─── ExerciseHistory ───────────────────────────────────────────────────────
+
+  Future<List<ExerciseHistory>> getHistoryForExercise(int exerciseId) async {
+    return await isar.exerciseHistorys
         .filter()
         .exerciseIdEqualTo(exerciseId)
+        .sortByDateDesc()
         .findAll();
   }
 
-  Future<void> saveWorkoutSet(WorkoutSet set) async {
+  Future<void> saveHistory(ExerciseHistory history) async {
     await isar.writeTxn(() async {
-      await isar.workoutSets.put(set);
+      await isar.exerciseHistorys.put(history);
     });
   }
 
-  Future<void> deleteWorkoutSet(int id) async {
+  // ─── PersonalRecord ────────────────────────────────────────────────────────
+
+  Future<List<PersonalRecord>> getRecordsForExercise(int exerciseId) async {
+    return await isar.personalRecords
+        .filter()
+        .exerciseIdEqualTo(exerciseId)
+        .sortByDateDesc()
+        .findAll();
+  }
+
+  Future<void> saveRecord(PersonalRecord record) async {
     await isar.writeTxn(() async {
-      await isar.workoutSets.delete(id);
+      await isar.personalRecords.put(record);
     });
+  }
+
+  Future<void> deleteRecord(int id) async {
+    await isar.writeTxn(() async {
+      await isar.personalRecords.delete(id);
+    });
+  }
+
+  // ─── Workouts (legacy — kept for DB compatibility) ────────────────────────
+
+  Future<List<Workout>> getAllWorkouts() async {
+    return await isar.workouts.where().sortByDateDesc().findAll();
   }
 }

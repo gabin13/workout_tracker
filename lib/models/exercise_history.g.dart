@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'personal_record.dart';
+part of 'exercise_history.dart';
 
 // **************************************************************************
 // IsarCollectionGenerator
@@ -9,13 +9,13 @@ part of 'personal_record.dart';
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-extension GetPersonalRecordCollection on Isar {
-  IsarCollection<PersonalRecord> get personalRecords => this.collection();
+extension GetExerciseHistoryCollection on Isar {
+  IsarCollection<ExerciseHistory> get exerciseHistorys => this.collection();
 }
 
-const PersonalRecordSchema = CollectionSchema(
-  name: r'PersonalRecord',
-  id: -5502306867987183745,
+const ExerciseHistorySchema = CollectionSchema(
+  name: r'ExerciseHistory',
+  id: 1208015327924720424,
   properties: {
     r'date': PropertySchema(
       id: 0,
@@ -27,61 +27,62 @@ const PersonalRecordSchema = CollectionSchema(
       name: r'exerciseId',
       type: IsarType.long,
     ),
-    r'poidsMax': PropertySchema(
+    r'series': PropertySchema(
       id: 2,
-      name: r'poidsMax',
-      type: IsarType.double,
+      name: r'series',
+      type: IsarType.string,
     )
   },
-  estimateSize: _personalRecordEstimateSize,
-  serialize: _personalRecordSerialize,
-  deserialize: _personalRecordDeserialize,
-  deserializeProp: _personalRecordDeserializeProp,
+  estimateSize: _exerciseHistoryEstimateSize,
+  serialize: _exerciseHistorySerialize,
+  deserialize: _exerciseHistoryDeserialize,
+  deserializeProp: _exerciseHistoryDeserializeProp,
   idName: r'id',
   indexes: {},
   links: {},
   embeddedSchemas: {},
-  getId: _personalRecordGetId,
-  getLinks: _personalRecordGetLinks,
-  attach: _personalRecordAttach,
+  getId: _exerciseHistoryGetId,
+  getLinks: _exerciseHistoryGetLinks,
+  attach: _exerciseHistoryAttach,
   version: '3.1.0+1',
 );
 
-int _personalRecordEstimateSize(
-  PersonalRecord object,
+int _exerciseHistoryEstimateSize(
+  ExerciseHistory object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.series.length * 3;
   return bytesCount;
 }
 
-void _personalRecordSerialize(
-  PersonalRecord object,
+void _exerciseHistorySerialize(
+  ExerciseHistory object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDateTime(offsets[0], object.date);
   writer.writeLong(offsets[1], object.exerciseId);
-  writer.writeDouble(offsets[2], object.poidsMax);
+  writer.writeString(offsets[2], object.series);
 }
 
-PersonalRecord _personalRecordDeserialize(
+ExerciseHistory _exerciseHistoryDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = PersonalRecord();
+  final object = ExerciseHistory();
   object.date = reader.readDateTime(offsets[0]);
   object.exerciseId = reader.readLong(offsets[1]);
   object.id = id;
-  object.poidsMax = reader.readDouble(offsets[2]);
+  object.series = reader.readString(offsets[2]);
   return object;
 }
 
-P _personalRecordDeserializeProp<P>(
+P _exerciseHistoryDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -93,37 +94,37 @@ P _personalRecordDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-Id _personalRecordGetId(PersonalRecord object) {
+Id _exerciseHistoryGetId(ExerciseHistory object) {
   return object.id;
 }
 
-List<IsarLinkBase<dynamic>> _personalRecordGetLinks(PersonalRecord object) {
+List<IsarLinkBase<dynamic>> _exerciseHistoryGetLinks(ExerciseHistory object) {
   return [];
 }
 
-void _personalRecordAttach(
-    IsarCollection<dynamic> col, Id id, PersonalRecord object) {
+void _exerciseHistoryAttach(
+    IsarCollection<dynamic> col, Id id, ExerciseHistory object) {
   object.id = id;
 }
 
-extension PersonalRecordQueryWhereSort
-    on QueryBuilder<PersonalRecord, PersonalRecord, QWhere> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhere> anyId() {
+extension ExerciseHistoryQueryWhereSort
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QWhere> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 }
 
-extension PersonalRecordQueryWhere
-    on QueryBuilder<PersonalRecord, PersonalRecord, QWhereClause> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhereClause> idEqualTo(
+extension ExerciseHistoryQueryWhere
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QWhereClause> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhereClause> idEqualTo(
       Id id) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IdWhereClause.between(
@@ -133,8 +134,8 @@ extension PersonalRecordQueryWhere
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhereClause> idNotEqualTo(
-      Id id) {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhereClause>
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -156,9 +157,8 @@ extension PersonalRecordQueryWhere
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhereClause> idGreaterThan(
-      Id id,
-      {bool include = false}) {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -166,7 +166,7 @@ extension PersonalRecordQueryWhere
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhereClause> idLessThan(
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhereClause> idLessThan(
       Id id,
       {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
@@ -176,7 +176,7 @@ extension PersonalRecordQueryWhere
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterWhereClause> idBetween(
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
@@ -193,9 +193,9 @@ extension PersonalRecordQueryWhere
   }
 }
 
-extension PersonalRecordQueryFilter
-    on QueryBuilder<PersonalRecord, PersonalRecord, QFilterCondition> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+extension ExerciseHistoryQueryFilter
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QFilterCondition> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       dateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -205,7 +205,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       dateGreaterThan(
     DateTime value, {
     bool include = false,
@@ -219,7 +219,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       dateLessThan(
     DateTime value, {
     bool include = false,
@@ -233,7 +233,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       dateBetween(
     DateTime lower,
     DateTime upper, {
@@ -251,7 +251,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       exerciseIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -261,7 +261,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       exerciseIdGreaterThan(
     int value, {
     bool include = false,
@@ -275,7 +275,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       exerciseIdLessThan(
     int value, {
     bool include = false,
@@ -289,7 +289,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       exerciseIdBetween(
     int lower,
     int upper, {
@@ -307,8 +307,8 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition> idEqualTo(
-      Id value) {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'id',
@@ -317,7 +317,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       idGreaterThan(
     Id value, {
     bool include = false,
@@ -331,7 +331,7 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
       idLessThan(
     Id value, {
     bool include = false,
@@ -345,7 +345,8 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition> idBetween(
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
@@ -362,220 +363,293 @@ extension PersonalRecordQueryFilter
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
-      poidsMaxEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesEqualTo(
+    String value, {
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'poidsMax',
+        property: r'series',
         value: value,
-        epsilon: epsilon,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
-      poidsMaxGreaterThan(
-    double value, {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesGreaterThan(
+    String value, {
     bool include = false,
-    double epsilon = Query.epsilon,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'poidsMax',
+        property: r'series',
         value: value,
-        epsilon: epsilon,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
-      poidsMaxLessThan(
-    double value, {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesLessThan(
+    String value, {
     bool include = false,
-    double epsilon = Query.epsilon,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'poidsMax',
+        property: r'series',
         value: value,
-        epsilon: epsilon,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterFilterCondition>
-      poidsMaxBetween(
-    double lower,
-    double upper, {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesBetween(
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    double epsilon = Query.epsilon,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'poidsMax',
+        property: r'series',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        epsilon: epsilon,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'series',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'series',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'series',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'series',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'series',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterFilterCondition>
+      seriesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'series',
+        value: '',
       ));
     });
   }
 }
 
-extension PersonalRecordQueryObject
-    on QueryBuilder<PersonalRecord, PersonalRecord, QFilterCondition> {}
+extension ExerciseHistoryQueryObject
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QFilterCondition> {}
 
-extension PersonalRecordQueryLinks
-    on QueryBuilder<PersonalRecord, PersonalRecord, QFilterCondition> {}
+extension ExerciseHistoryQueryLinks
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QFilterCondition> {}
 
-extension PersonalRecordQuerySortBy
-    on QueryBuilder<PersonalRecord, PersonalRecord, QSortBy> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> sortByDate() {
+extension ExerciseHistoryQuerySortBy
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QSortBy> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> sortByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> sortByDateDesc() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
+      sortByDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.desc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
       sortByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
       sortByExerciseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.desc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> sortByPoidsMax() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> sortBySeries() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'poidsMax', Sort.asc);
+      return query.addSortBy(r'series', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
-      sortByPoidsMaxDesc() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
+      sortBySeriesDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'poidsMax', Sort.desc);
+      return query.addSortBy(r'series', Sort.desc);
     });
   }
 }
 
-extension PersonalRecordQuerySortThenBy
-    on QueryBuilder<PersonalRecord, PersonalRecord, QSortThenBy> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> thenByDate() {
+extension ExerciseHistoryQuerySortThenBy
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QSortThenBy> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> thenByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> thenByDateDesc() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
+      thenByDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'date', Sort.desc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
       thenByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
       thenByExerciseIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'exerciseId', Sort.desc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> thenById() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> thenByIdDesc() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy> thenByPoidsMax() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy> thenBySeries() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'poidsMax', Sort.asc);
+      return query.addSortBy(r'series', Sort.asc);
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QAfterSortBy>
-      thenByPoidsMaxDesc() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QAfterSortBy>
+      thenBySeriesDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'poidsMax', Sort.desc);
+      return query.addSortBy(r'series', Sort.desc);
     });
   }
 }
 
-extension PersonalRecordQueryWhereDistinct
-    on QueryBuilder<PersonalRecord, PersonalRecord, QDistinct> {
-  QueryBuilder<PersonalRecord, PersonalRecord, QDistinct> distinctByDate() {
+extension ExerciseHistoryQueryWhereDistinct
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QDistinct> {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QDistinct> distinctByDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'date');
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QDistinct>
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QDistinct>
       distinctByExerciseId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'exerciseId');
     });
   }
 
-  QueryBuilder<PersonalRecord, PersonalRecord, QDistinct> distinctByPoidsMax() {
+  QueryBuilder<ExerciseHistory, ExerciseHistory, QDistinct> distinctBySeries(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'poidsMax');
+      return query.addDistinctBy(r'series', caseSensitive: caseSensitive);
     });
   }
 }
 
-extension PersonalRecordQueryProperty
-    on QueryBuilder<PersonalRecord, PersonalRecord, QQueryProperty> {
-  QueryBuilder<PersonalRecord, int, QQueryOperations> idProperty() {
+extension ExerciseHistoryQueryProperty
+    on QueryBuilder<ExerciseHistory, ExerciseHistory, QQueryProperty> {
+  QueryBuilder<ExerciseHistory, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<PersonalRecord, DateTime, QQueryOperations> dateProperty() {
+  QueryBuilder<ExerciseHistory, DateTime, QQueryOperations> dateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'date');
     });
   }
 
-  QueryBuilder<PersonalRecord, int, QQueryOperations> exerciseIdProperty() {
+  QueryBuilder<ExerciseHistory, int, QQueryOperations> exerciseIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'exerciseId');
     });
   }
 
-  QueryBuilder<PersonalRecord, double, QQueryOperations> poidsMaxProperty() {
+  QueryBuilder<ExerciseHistory, String, QQueryOperations> seriesProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'poidsMax');
+      return query.addPropertyName(r'series');
     });
   }
 }

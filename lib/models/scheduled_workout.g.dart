@@ -27,10 +27,10 @@ const ScheduledWorkoutSchema = CollectionSchema(
       name: r'isCompleted',
       type: IsarType.bool,
     ),
-    r'programmeNom': PropertySchema(
+    r'workoutProgramId': PropertySchema(
       id: 2,
-      name: r'programmeNom',
-      type: IsarType.string,
+      name: r'workoutProgramId',
+      type: IsarType.long,
     )
   },
   estimateSize: _scheduledWorkoutEstimateSize,
@@ -53,7 +53,6 @@ int _scheduledWorkoutEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.programmeNom.length * 3;
   return bytesCount;
 }
 
@@ -65,7 +64,7 @@ void _scheduledWorkoutSerialize(
 ) {
   writer.writeDateTime(offsets[0], object.datePrevue);
   writer.writeBool(offsets[1], object.isCompleted);
-  writer.writeString(offsets[2], object.programmeNom);
+  writer.writeLong(offsets[2], object.workoutProgramId);
 }
 
 ScheduledWorkout _scheduledWorkoutDeserialize(
@@ -78,7 +77,7 @@ ScheduledWorkout _scheduledWorkoutDeserialize(
   object.datePrevue = reader.readDateTime(offsets[0]);
   object.id = id;
   object.isCompleted = reader.readBool(offsets[1]);
-  object.programmeNom = reader.readString(offsets[2]);
+  object.workoutProgramId = reader.readLong(offsets[2]);
   return object;
 }
 
@@ -94,7 +93,7 @@ P _scheduledWorkoutDeserializeProp<P>(
     case 1:
       return (reader.readBool(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -317,137 +316,57 @@ extension ScheduledWorkoutQueryFilter
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+      workoutProgramIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'programmeNom',
+        property: r'workoutProgramId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomGreaterThan(
-    String value, {
+      workoutProgramIdGreaterThan(
+    int value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'programmeNom',
+        property: r'workoutProgramId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomLessThan(
-    String value, {
+      workoutProgramIdLessThan(
+    int value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'programmeNom',
+        property: r'workoutProgramId',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomBetween(
-    String lower,
-    String upper, {
+      workoutProgramIdBetween(
+    int lower,
+    int upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'programmeNom',
+        property: r'workoutProgramId',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'programmeNom',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'programmeNom',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'programmeNom',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'programmeNom',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'programmeNom',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterFilterCondition>
-      programmeNomIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'programmeNom',
-        value: '',
       ));
     });
   }
@@ -490,16 +409,16 @@ extension ScheduledWorkoutQuerySortBy
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterSortBy>
-      sortByProgrammeNom() {
+      sortByWorkoutProgramId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'programmeNom', Sort.asc);
+      return query.addSortBy(r'workoutProgramId', Sort.asc);
     });
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterSortBy>
-      sortByProgrammeNomDesc() {
+      sortByWorkoutProgramIdDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'programmeNom', Sort.desc);
+      return query.addSortBy(r'workoutProgramId', Sort.desc);
     });
   }
 }
@@ -548,16 +467,16 @@ extension ScheduledWorkoutQuerySortThenBy
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterSortBy>
-      thenByProgrammeNom() {
+      thenByWorkoutProgramId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'programmeNom', Sort.asc);
+      return query.addSortBy(r'workoutProgramId', Sort.asc);
     });
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QAfterSortBy>
-      thenByProgrammeNomDesc() {
+      thenByWorkoutProgramIdDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'programmeNom', Sort.desc);
+      return query.addSortBy(r'workoutProgramId', Sort.desc);
     });
   }
 }
@@ -579,9 +498,9 @@ extension ScheduledWorkoutQueryWhereDistinct
   }
 
   QueryBuilder<ScheduledWorkout, ScheduledWorkout, QDistinct>
-      distinctByProgrammeNom({bool caseSensitive = true}) {
+      distinctByWorkoutProgramId() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'programmeNom', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'workoutProgramId');
     });
   }
 }
@@ -607,10 +526,10 @@ extension ScheduledWorkoutQueryProperty
     });
   }
 
-  QueryBuilder<ScheduledWorkout, String, QQueryOperations>
-      programmeNomProperty() {
+  QueryBuilder<ScheduledWorkout, int, QQueryOperations>
+      workoutProgramIdProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'programmeNom');
+      return query.addPropertyName(r'workoutProgramId');
     });
   }
 }
