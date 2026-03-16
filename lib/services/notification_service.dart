@@ -14,15 +14,17 @@ class NotificationService {
 
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings();
+    const DarwinInitializationSettings macosSettings = DarwinInitializationSettings();
     
     // Nouveauté V17 : paramètre nommé `settings`
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
+      macOS: macosSettings,
     );
 
     await _localNotifications.initialize(
-      initializationSettings: initSettings, 
+      settings: initSettings, 
     );
   }
 
@@ -33,11 +35,11 @@ class NotificationService {
 
     // Nouveauté V17 : paramètres nommés stricts pécifisés dans l'appel
     await _localNotifications.zonedSchedule(
-      id,
-      'Entraînement prévu !',
-      '💪 C\'est l\'heure du $programmeNom !',
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      const NotificationDetails(
+      id: id,
+      title: 'Entraînement prévu !',
+      body: '💪 C\'est l\'heure du $programmeNom !',
+      scheduledDate: tz.TZDateTime.from(scheduledDate, tz.local),
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'workout_reminder_channel',
           'Rappels d\'entraînement',
@@ -46,14 +48,14 @@ class NotificationService {
           priority: Priority.high,
         ),
         iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   Future<void> cancelReminder(int id) async {
-    await _localNotifications.cancel(id);
+    await _localNotifications.cancel(id: id);
   }
 }
