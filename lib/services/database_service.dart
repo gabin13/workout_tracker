@@ -139,6 +139,12 @@ class DatabaseService {
     });
   }
 
+  Future<void> deleteHistory(int id) async {
+    await isar.writeTxn(() async {
+      await isar.exerciseHistorys.delete(id);
+    });
+  }
+
   // ─── PersonalRecord ────────────────────────────────────────────────────────
 
   Future<List<PersonalRecord>> getRecordsForExercise(int exerciseId) async {

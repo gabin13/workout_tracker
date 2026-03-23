@@ -26,6 +26,8 @@ class ActiveExerciseState {
   final ProgramExercise progEx;
   final Exercise exerciseDetails;
   final List<SetData> sets;
+  bool isValidated = false;
+  int? savedHistoryId;
 
   ActiveExerciseState(this.progEx, this.exerciseDetails, this.sets);
 }
@@ -95,7 +97,7 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Valider la séance ?'),
-        content: const Text('Êtes-vous sûr de vouloir terminer et enregistrer cette séance ?'),
+        content: const Text('Êtes-vous sûr de vouloir terminer cette séance ? Assurez-vous d\'avoir validé tous vos exercices.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -114,70 +116,99 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
 
     setState(() => _isLoading = true);
     final db = ref.read(databaseProvider);
-    final now = DateTime.now();
 
-    // 1. Sauvegarder les ExerciseHistory et vérifier les PR
-    for (var ae in _activeExercises) {
-      List<double> validWeights = [];
-      List<int> validReps = [];
-
-      for (var s in ae.sets) {
-        final w = double.tryParse(s.weightController.text);
-        final r = int.tryParse(s.repsController.text);
-
-        if (w != null && r != null) {
-          validWeights.add(w);
-          validReps.add(r);
-          
-          // Vérifier si un nouveau RP est établi
-          final existingRecords = await db.getRecordsForExercise(ae.exerciseDetails.id);
-          bool isNewPR = false;
-          
-          if (existingRecords.isEmpty) {
-            isNewPR = true;
-          } else {
-            // Comparer avec les records existants
-            final currentMaxWeight = existingRecords.map((e) => e.poidsMax).reduce((a, b) => a > b ? a : b);
-            if (w > currentMaxWeight) {
-              isNewPR = true;
-            }
-          }
-
-          if (isNewPR) {
-            final newPR = PersonalRecord()
-              ..exerciseId = ae.exerciseDetails.id
-              ..date = now
-              ..poidsMax = w;
-            await db.saveRecord(newPR);
-          }
-        }
-      }
-
-      if (validWeights.isNotEmpty) {
-        // Préparer la série de la forme "10x50kg, 8x55kg"
-        List<String> listSeries = [];
-        for (int i = 0; i < validWeights.length; i++) {
-          listSeries.add('${validReps[i]}x${validWeights[i]}kg');
-        }
-
-        final history = ExerciseHistory()
-          ..exerciseId = ae.exerciseDetails.id
-          ..date = now
-          ..series = listSeries.join(', ');
-        await db.saveHistory(history);
-      }
-    }
-
-    // 2. Marquer la session comme terminée
     widget.session.isCompleted = true;
     await db.saveScheduledSession(widget.session);
 
-    // 3. Retour à l'accueil
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Séance validée avec succès 🎉')),
+        const SnackBar(content: Text('Séance terminée avec succès 🎉')),
       );
+    }
+  }
+
+  Future<void> _validerExercice(ActiveExerciseState ae) async {
+    final db = ref.read(databaseProvider);
+    final now = DateTime.now();
+
+    List<double> validWeights = [];
+    List<int> validReps = [];
+
+    for (var s in ae.sets) {
+      final w = double.tryParse(s.weightController.text);
+      final r = int.tryParse(s.repsController.text);
+
+      if (w != null && r != null) {
+        validWeights.add(w);
+        validReps.add(r);
+        
+        final existingRecords = await db.getRecordsForExercise(ae.exerciseDetails.id);
+        bool isNewPR = false;
+        
+        if (existingRecords.isEmpty) {
+          isNewPR = true;
+        } else {
+          final currentMaxWeight = existingRecords.map((e) => e.poidsMax).reduce((a, b) => a > b ? a : b);
+          if (w > currentMaxWeight) {
+            isNewPR = true;
+          }
+        }
+
+        if (isNewPR) {
+          final newPR = PersonalRecord()
+            ..exerciseId = ae.exerciseDetails.id
+            ..date = now
+            ..poidsMax = w;
+          await db.saveRecord(newPR);
+          print('---- ISAR: NOUVEAU RP ENREGISTRÉ: $w kg pour ${ae.exerciseDetails.nom} ----');
+        }
+      }
+    }
+
+    if (validWeights.isNotEmpty) {
+      List<String> listSeries = [];
+      for (int i = 0; i < validWeights.length; i++) {
+        listSeries.add('${validReps[i]}x${validWeights[i]}kg');
+      }
+
+      final history = ExerciseHistory()
+        ..exerciseId = ae.exerciseDetails.id
+        ..date = now
+        ..series = listSeries.join(', ');
+        
+      await db.saveHistory(history);
+      print('---- ISAR: HISTORIQUE ENREGISTRÉ: ID ${history.id} pour ${ae.exerciseDetails.nom} ----');
+
+      setState(() {
+        ae.savedHistoryId = history.id;
+        ae.isValidated = true;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${ae.exerciseDetails.nom} validé !')),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Veuillez entrer au moins une série valide.'), backgroundColor: Colors.orange),
+        );
+      }
+    }
+  }
+
+  Future<void> _annulerExercice(ActiveExerciseState ae) async {
+    if (ae.savedHistoryId != null) {
+      final db = ref.read(databaseProvider);
+      await db.deleteHistory(ae.savedHistoryId!);
+      print('---- ISAR: HISTORIQUE SUPPRIMÉ: ID ${ae.savedHistoryId} pour ${ae.exerciseDetails.nom} ----');
+      
+      setState(() {
+        ae.savedHistoryId = null;
+        ae.isValidated = false;
+      });
     }
   }
 
@@ -226,6 +257,48 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
   }
 
   Widget _buildExerciseCard(ActiveExerciseState ae) {
+    // Si l'exercice est validé
+    if (ae.isValidated) {
+      int validSetsCount = ae.sets.where((s) => s.weightController.text.isNotEmpty && s.repsController.text.isNotEmpty).length;
+      return Card(
+        margin: const EdgeInsets.only(bottom: 24),
+        color: Colors.green.shade50.withAlpha(50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.green.shade300, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          child: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.green, size: 36),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ae.exerciseDetails.nom,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '$validSetsCount séries enregistrées',
+                      style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () => _annulerExercice(ae),
+                child: const Text('Modifier', style: TextStyle(color: Colors.grey)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Sinon, mode édition
     return Card(
       margin: const EdgeInsets.only(bottom: 24),
       elevation: 2,
@@ -312,12 +385,26 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
               },
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Center(
               child: TextButton.icon(
                 onPressed: () => _addSet(ae),
                 icon: const Icon(Icons.add),
                 label: const Text('Ajouter une série'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _validerExercice(ae),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: const Icon(Icons.save),
+                label: const Text('Valider cet exercice'),
               ),
             ),
           ],
