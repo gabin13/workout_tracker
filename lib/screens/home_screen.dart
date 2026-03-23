@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
-import '../providers/exercise_provider.dart';
-import '../models/exercise.dart';
-import 'package:table_calendar/table_calendar.dart';
+import '../providers/health_provider.dart';
+import '../providers/nutrition_provider.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -12,10 +12,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheduledAsync = ref.watch(scheduledWorkoutsProvider);
-    final programsAsync = ref.watch(workoutProgramsProvider);
-    final exercisesAsync = ref.watch(exercisesProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Workout Dashboard'),
@@ -32,153 +28,286 @@ class HomeScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // --- SECTION HAUT : Séance du jour (Flex 2) ---
+              Expanded(
+                flex: 2,
+                child: _buildTopSection(context, ref),
+              ),
+              const SizedBox(height: 16),
+              
+              // --- SECTION MILIEU : Mini Dashboard Santé (Flex 1) ---
+              Expanded(
+                flex: 1,
+                child: _buildMiddleSection(context, ref),
+              ),
+              const SizedBox(height: 16),
+
+              // --- SECTION BAS : Mini Dashboard Nutrition (Flex 1) ---
+              Expanded(
+                flex: 1,
+                child: _buildBottomSection(context, ref),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 1. SECTION HAUT : Séance du Jour
+  // ---------------------------------------------------------------------------
+  Widget _buildTopSection(BuildContext context, WidgetRef ref) {
+    final scheduledAsync = ref.watch(scheduledWorkoutsProvider);
+    final programsAsync = ref.watch(workoutProgramsProvider);
+
+    return scheduledAsync.when(
+      data: (sessions) {
+        final today = DateTime.now();
+        final todaySession = sessions.where((s) => isSameDay(s.datePrevue, today)).firstOrNull;
+
+        if (todaySession == null) {
+          // Jour de repos
+          return _buildWorkOutCard(
+            context,
+            title: 'Jour de repos',
+            subtitle: 'Prenez le temps de récupérer',
+            icon: Icons.hotel_class_outlined,
+            colors: [Colors.blueGrey.shade400, Colors.blueGrey.shade700],
+          );
+        }
+
+        return programsAsync.when(
+          data: (programs) {
+            final program = programs.where((p) => p.id == todaySession.workoutProgramId).firstOrNull;
+            if (program == null) {
+              return _buildWorkOutCard(
+                context,
+                title: 'Programme introuvable',
+                subtitle: '',
+                icon: Icons.error_outline,
+                colors: [Colors.red.shade400, Colors.red.shade700],
+              );
+            }
+
+            // Séance prévue
+            return _buildWorkOutCard(
+              context,
+              title: 'Séance du jour',
+              subtitle: program.nom.toUpperCase(),
+              icon: Icons.fitness_center,
+              colors: [Colors.deepPurpleAccent.shade200, Colors.deepPurpleAccent.shade700],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Erreur: $err')),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Erreur: $err')),
+    );
+  }
+
+  Widget _buildWorkOutCard(BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> colors,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: colors.last.withAlpha(80),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ─── SÉANCE DU JOUR ──────────────────────────────────────────────
-            const Text('Ma séance du jour',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Icon(icon, size: 64, color: Colors.white.withAlpha(200)),
             const SizedBox(height: 16),
-            scheduledAsync.when(
-              data: (sessions) {
-                final today = DateTime.now();
-                final todaySession = sessions.where((s) => isSameDay(s.datePrevue, today)).firstOrNull;
-
-                if (todaySession == null) {
-                  return _buildNoWorkoutView(context);
-                }
-
-                return programsAsync.when(
-                  data: (programs) {
-                    final program = programs.where((p) => p.id == todaySession.workoutProgramId).firstOrNull;
-                    if (program == null) return const Center(child: Text('Programme introuvable.'));
-
-                    return exercisesAsync.when(
-                      data: (allExercises) {
-                        return _buildTodayWorkoutDetail(context, program, allExercises);
-                      },
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => Text('Erreur: $err'),
-                    );
-                  },
-                  loading: () => const LinearProgressIndicator(),
-                  error: (err, _) => Text('Erreur: $err'),
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text('Erreur: $err')),
+            Text(
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
+            if (subtitle.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                textAlign: TextAlign.center,
+              ),
+            ]
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNoWorkoutView(BuildContext context) {
+  // ---------------------------------------------------------------------------
+  // 2. SECTION MILIEU : Dashboard Santé (Pas & Calories Brûlées)
+  // ---------------------------------------------------------------------------
+  Widget _buildMiddleSection(BuildContext context, WidgetRef ref) {
+    final healthDataAsync = ref.watch(todayHealthDataProvider);
+
+    return healthDataAsync.when(
+      data: (data) {
+        final steps = data['steps'] ?? 0;
+        final calories = data['calories'] ?? 0;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: 1,
+              child: _buildSquareHealthCard(
+                context,
+                title: 'Pas',
+                value: steps.toString(),
+                icon: Icons.directions_walk,
+                color: Colors.blueAccent,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 1,
+              child: _buildSquareHealthCard(
+                context,
+                title: 'Brûlées',
+                value: '$calories kcal',
+                icon: Icons.local_fire_department,
+                color: Colors.orangeAccent,
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
+    );
+  }
+
+  Widget _buildSquareHealthCard(BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-        child: Column(
-          children: [
-            Icon(Icons.hotel_class_outlined, size: 64, color: Colors.blueGrey),
-            SizedBox(height: 16),
-            Text(
-              'Repos aujourd\'hui !',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Profitez-en pour bien récupérer ou planifiez votre prochaine séance 🚀',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
+      color: color.withAlpha(25),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: color.withAlpha(70), width: 1.5),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 40, color: color),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTodayWorkoutDetail(BuildContext context, dynamic program, dynamic allExercises) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurpleAccent.shade200, Colors.deepPurpleAccent.shade700],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.deepPurpleAccent.withValues(alpha: 0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('PROGRAMME',
-                  style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, fontSize: 12)),
-              const SizedBox(height: 4),
-              Text(program.nom,
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.fitness_center, color: Colors.white, size: 18),
-                  const SizedBox(width: 8),
-                  Text('${program.exercises.length} exercices à réaliser',
-                      style: const TextStyle(color: Colors.white)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        const Text('Détail des exercices',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        ...program.exercises.map<Widget>((progEx) {
-          final exercise = allExercises.firstWhere(
-            (e) => e.id == progEx.exerciseId,
-            orElse: () => Exercise()..nom = 'Exercice supprimé'..musclePrincipal = 'N/A',
-          );
+  // ---------------------------------------------------------------------------
+  // 3. SECTION BAS : Dashboard Nutrition (Calories Consommées)
+  // ---------------------------------------------------------------------------
+  Widget _buildBottomSection(BuildContext context, WidgetRef ref) {
+    final goalAsync = ref.watch(nutritionGoalProvider);
+    final logAsync = ref.watch(dailyNutritionLogProvider);
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.grey.shade100,
-                child: const Icon(Icons.check_circle_outline, color: Colors.grey),
+    return goalAsync.when(
+      data: (goal) {
+        return logAsync.when(
+          data: (log) {
+            // Calculer les calories mangées depuis les meals
+            int totalEaten = 0;
+            for (var m in log.entries) {
+              totalEaten += m.calories;
+            }
+
+            final progress = goal.calories > 0 ? (totalEaten / goal.calories) : 0.0;
+            final isOver = totalEaten > goal.calories;
+
+            return Card(
+              elevation: 0,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.restaurant, color: Colors.green, size: 28),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Nutrition',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '$totalEaten / ${goal.calories} kcal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isOver ? Colors.redAccent : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        minHeight: 12,
+                        backgroundColor: Colors.grey.withAlpha(50),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isOver ? Colors.redAccent : Colors.greenAccent.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              title: Text(exercise.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(exercise.musclePrincipal),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('${progEx.targetSets ?? "?"} séries',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurpleAccent)),
-                  Text('${progEx.targetReps ?? "?"} reps',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-      ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => const Center(child: Text('Log non trouvé')),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => const Center(child: Text('Objectif non défini')),
     );
   }
 }

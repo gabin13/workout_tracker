@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../services/health_service.dart';
-
-// Provider to get HealthService instance (assuming it's defined elsewhere or we can use a direct provider)
-final healthServiceProvider = Provider((ref) => HealthService());
+import '../../providers/health_provider.dart';
 
 class StepsDetailsScreen extends ConsumerStatefulWidget {
   const StepsDetailsScreen({super.key});

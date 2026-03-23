@@ -4,11 +4,10 @@ import '../services/health_service.dart';
 import '../providers/database_provider.dart';
 import '../models/body_measurement.dart';
 import 'settings_screen.dart';
+import '../providers/health_provider.dart';
 import 'health/weight_details_screen.dart';
 import 'health/steps_details_screen.dart';
 import 'health/calories_details_screen.dart';
-
-final healthServiceProvider = Provider((ref) => HealthService());
 
 class HealthScreen extends ConsumerStatefulWidget {
   const HealthScreen({super.key});

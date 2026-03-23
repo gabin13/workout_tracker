@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../services/health_service.dart';
-
-final healthServiceProvider = Provider((ref) => HealthService());
+import '../../providers/health_provider.dart';
 
 class CaloriesDetailsScreen extends ConsumerStatefulWidget {
   const CaloriesDetailsScreen({super.key});
