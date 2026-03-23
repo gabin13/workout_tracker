@@ -41,11 +41,11 @@ class HomeScreen extends ConsumerWidget {
             children: [
               // --- SECTION HAUT : Séance du jour ---
               _buildTopSection(context, ref),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               
               // --- SECTION MILIEU : Mini Dashboard Santé ---
               _buildMiddleSection(context, ref),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // --- SECTION BAS : Mini Dashboard Nutrition ---
               _buildBottomSection(context, ref),
