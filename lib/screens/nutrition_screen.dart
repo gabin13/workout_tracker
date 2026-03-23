@@ -140,9 +140,14 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     final kcalPercent = (totalKcal / goal.calories).clamp(0.0, 1.0);
     final overLimit = totalKcal > goal.calories;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      elevation: 4,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -157,8 +162,8 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   child: CircularProgressIndicator(
                     value: kcalPercent,
                     strokeWidth: 12,
-                    backgroundColor: Colors.grey.withAlpha(50),
-                    color: overLimit ? Colors.redAccent : Theme.of(context).colorScheme.primary,
+                    backgroundColor: Colors.grey[200],
+                    color: overLimit ? Colors.redAccent : Colors.deepPurpleAccent,
                   ),
                 ),
                 Column(
@@ -166,11 +171,11 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   children: [
                     Text(
                       kcalRemaining.abs().toString(),
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
                     Text(
                       overLimit ? 'Kcal en trop' : 'Kcal restantes',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
                   ],
                 ),
@@ -202,13 +207,13 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
           child: CircularProgressIndicator(
             value: percent,
             strokeWidth: 6,
-            backgroundColor: Colors.grey.withAlpha(50),
+            backgroundColor: Colors.grey[200],
             color: color,
           ),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        Text('$current/${target}g', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+        Text('$current/${target}g', style: TextStyle(fontSize: 10, color: Colors.grey[500])),
       ],
     );
   }
@@ -249,29 +254,47 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
       }
     }
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withAlpha(30),
-            borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _getMealColor(type).withAlpha(25),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: _getMealColor(type)),
           ),
-          child: Icon(icon, color: Theme.of(context).colorScheme.primary),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: hasEntries 
-          ? Text('$kcal kcal • ${prot}p ${gluc}g ${lip}l\n$notes', maxLines: 2, overflow: TextOverflow.ellipsis)
-          : const Text('Aucun aliment saisi'),
-        trailing: IconButton(
-          icon: Icon(hasEntries ? Icons.edit_outlined : Icons.add_circle_outline),
-          onPressed: () => _showMealForm(context, ref, log, type, entries.isNotEmpty ? entries.first : null),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+          subtitle: hasEntries 
+            ? Text('$kcal kcal • ${prot}p ${gluc}g ${lip}l\n$notes', style: TextStyle(color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis)
+            : Text('Aucun aliment saisi', style: TextStyle(color: Colors.grey[400])),
+          trailing: IconButton(
+            icon: Icon(hasEntries ? Icons.edit_outlined : Icons.add_circle_outline, color: Colors.grey),
+            onPressed: () => _showMealForm(context, ref, log, type, entries.isNotEmpty ? entries.first : null),
+          ),
         ),
       ),
     );
+  }
+
+  Color _getMealColor(MealType type) {
+    switch (type) {
+      case MealType.petitDejeuner: return Colors.orange;
+      case MealType.dejeuner: return Colors.blue;
+      case MealType.diner: return Colors.indigo;
+      case MealType.collation: return Colors.green;
+    }
   }
 
   void _showMealForm(BuildContext context, WidgetRef ref, DailyNutritionLog log, MealType type, MealEntry? existing) {

@@ -250,10 +250,18 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
       }
     }
 
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Row(
@@ -262,11 +270,11 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Mon IMC', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                Text('Mon IMC', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 Text(
                   bmi > 0 ? bmi.toStringAsFixed(1) : '--',
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
               ],
             ),
@@ -274,13 +282,15 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: statusColor.withAlpha(30),
+                  color: status == 'Normal' ? Colors.green.withAlpha(40) : statusColor.withAlpha(30),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: statusColor.withAlpha(100), width: 1.0),
                 ),
                 child: Text(
                   status,
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: status == 'Normal' ? Colors.green[800]! : statusColor, 
+                    fontWeight: FontWeight.bold
+                  ),
                 ),
               ),
           ],
@@ -341,47 +351,55 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     required Color color,
     Function()? onTap,
   }) {
-    return Card(
-      elevation: 0,
-      color: color.withAlpha((0.1 * 255).toInt()),
-      shape: RoundedRectangleBorder(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: color.withAlpha((0.3 * 255).toInt()), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10), // 4% opacity
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: color, size: 40),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: TextStyle(color: color, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  if (unit.isNotEmpty) ...[
-                    const SizedBox(width: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: color, size: 40),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
                     Text(
-                      unit,
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      value,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
+                    if (unit.isNotEmpty) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        unit,
+                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
