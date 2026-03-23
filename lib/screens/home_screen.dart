@@ -125,8 +125,8 @@ class HomeScreen extends ConsumerWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ActiveSessionScreen(
+                      CustomPageRoute(
+                        page: ActiveSessionScreen(
                           session: todaySession,
                           program: program,
                         ),
