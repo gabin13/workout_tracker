@@ -230,26 +230,34 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.program.nom),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: FilledButton.icon(
-              onPressed: _isLoading ? null : _terminerSeance,
-              icon: const Icon(Icons.check),
-              label: const Text('Terminer'),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.green,
-              ),
-            ),
-          )
-        ],
+        actions: const [], // Action retirée pour être placée en OutlinedButton en bas
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _activeExercises.length,
+              itemCount: _activeExercises.length + 1,
               itemBuilder: (context, index) {
+                if (index == _activeExercises.length) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        child: OutlinedButton(
+                          onPressed: _isLoading ? null : _terminerSeance,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context).primaryColor,
+                            side: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Terminer la séance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                    ),
+                  );
+                }
                 return _buildExerciseCard(_activeExercises[index]);
               },
             ),
@@ -387,8 +395,13 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
             
             const SizedBox(height: 8),
             Center(
-              child: TextButton.icon(
+              child: OutlinedButton.icon(
                 onPressed: () => _addSet(ae),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                  side: BorderSide(color: Theme.of(context).primaryColor),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 icon: const Icon(Icons.add),
                 label: const Text('Ajouter une série'),
               ),

@@ -100,7 +100,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
     return Scaffold(
       body: Column(
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           // Barre de recherche
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -169,6 +169,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
             ),
           ),
           const Divider(height: 1),
+          const SizedBox(height: 16), // Espacement après la barre/filtre avant les listes
           // Liste
           Expanded(
             child: exercisesAsync.when(
