@@ -211,21 +211,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Column(
       children: [
-        // En-tête interactif Santé
-        InkWell(
-          onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                Text('Santé', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
-                const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
+
         healthDataAsync.when(
             data: (data) {
               final steps = data['steps'] ?? 0;
@@ -334,16 +320,7 @@ class HomeScreen extends ConsumerWidget {
 
     return Column(
       children: [
-        // En-tête Nutrition
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            children: [
-              Text('Nutrition', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
+
         goalAsync.when(
             data: (goal) {
               return logAsync.when(
@@ -370,9 +347,13 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -412,6 +393,8 @@ class HomeScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
+                  ),
+                ),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
