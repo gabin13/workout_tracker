@@ -152,16 +152,17 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            );
-          },
-          loading: () => const ShimmerPlaceholderWorkout(),
-          error: (err, _) => Center(child: Text('Erreur: $err')),
-        );
-      },
-      loading: () => const ShimmerPlaceholderWorkout(),
-      error: (err, _) => Center(child: Text('Erreur: $err')),
-    );
-  }
+            ),
+          );
+        },
+        loading: () => const ShimmerPlaceholderWorkout(),
+        error: (err, _) => Center(child: Text('Erreur: $err')),
+      );
+    },
+    loading: () => const ShimmerPlaceholderWorkout(),
+    error: (err, _) => Center(child: Text('Erreur: $err')),
+  );
+}
 
   Widget _buildWorkOutCard(BuildContext context, {
     required String title,

@@ -401,7 +401,6 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
             const SizedBox(height: 8),
             Center(
               child: OutlinedButton.icon(
-                onPressed: () => _addSet(ae),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Theme.of(context).primaryColor,
                   side: BorderSide(color: Theme.of(context).primaryColor),
