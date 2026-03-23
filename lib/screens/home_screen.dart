@@ -225,8 +225,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Expanded(
-          child: healthDataAsync.when(
+        healthDataAsync.when(
             data: (data) {
               final steps = data['steps'] ?? 0;
               final calories = data['calories'] ?? 0;
@@ -263,7 +262,6 @@ class HomeScreen extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
           ),
-        ),
       ],
     );
   }
@@ -276,7 +274,7 @@ class HomeScreen extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      height: 130,
+      height: 140,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -344,8 +342,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Expanded(
-          child: goalAsync.when(
+        goalAsync.when(
             data: (goal) {
               return logAsync.when(
                 data: (log) {
@@ -421,7 +418,6 @@ class HomeScreen extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) => const Center(child: Text('Objectif non défini')),
-    ),
     ),
     ],
     );
