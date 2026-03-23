@@ -33,18 +33,19 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               // --- SECTION HAUT : Séance du jour ---
               _buildTopSection(context, ref),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               
               // --- SECTION MILIEU : Mini Dashboard Santé ---
               _buildMiddleSection(context, ref),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
               // --- SECTION BAS : Mini Dashboard Nutrition ---
               _buildBottomSection(context, ref),
@@ -231,7 +232,6 @@ class HomeScreen extends ConsumerWidget {
               final calories = data['calories'] ?? 0;
 
               return Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
             Expanded(
               flex: 1,
@@ -274,7 +274,6 @@ class HomeScreen extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     return Container(
-      height: 140,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -298,22 +297,25 @@ class HomeScreen extends ConsumerWidget {
               top: 12,
               child: Icon(Icons.chevron_right, color: color.withAlpha(150)),
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 40, color: color),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                ],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, size: 40, color: color),
+                    const SizedBox(height: 8),
+                    Text(
+                      title,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
