@@ -211,14 +211,32 @@ class HomeScreen extends ConsumerWidget {
   Widget _buildMiddleSection(BuildContext context, WidgetRef ref) {
     final healthDataAsync = ref.watch(todayHealthDataProvider);
 
-    return healthDataAsync.when(
-      data: (data) {
-        final steps = data['steps'] ?? 0;
-        final calories = data['calories'] ?? 0;
+    return Column(
+      children: [
+        // En-tête interactif Santé
+        InkWell(
+          onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Text('Santé', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
+                const Spacer(),
+                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: healthDataAsync.when(
+            data: (data) {
+              final steps = data['steps'] ?? 0;
+              final calories = data['calories'] ?? 0;
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
             Expanded(
               flex: 1,
               child: _buildSquareCard(
@@ -243,10 +261,13 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
           ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
+            );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
+          ),
+        ),
+      ],
     );
   }
 
@@ -313,10 +334,28 @@ class HomeScreen extends ConsumerWidget {
     final goalAsync = ref.watch(nutritionGoalProvider);
     final logAsync = ref.watch(dailyNutritionLogProvider);
 
-    return goalAsync.when(
-      data: (goal) {
-        return logAsync.when(
-          data: (log) {
+    return Column(
+      children: [
+        // En-tête interactif Nutrition
+        InkWell(
+          onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Text('Nutrition', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
+                const Spacer(),
+                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: goalAsync.when(
+            data: (goal) {
+              return logAsync.when(
+                data: (log) {
             // Calculer les calories mangées depuis les meals
             int totalEaten = 0;
             for (var m in log.entries) {
@@ -339,16 +378,12 @@ class HomeScreen extends ConsumerWidget {
                 ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                         Row(
                           children: [
                             const Icon(Icons.restaurant, color: Colors.green, size: 28),
@@ -382,11 +417,9 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+                          ],
+                        ),
+                      ),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -395,6 +428,9 @@ class HomeScreen extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) => const Center(child: Text('Objectif non défini')),
+    ),
+    ),
+    ],
     );
   }
 }
