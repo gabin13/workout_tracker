@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/exercise.dart';
 import '../models/exercise_history.dart';
@@ -23,57 +24,76 @@ class ExerciseDetailScreen extends ConsumerStatefulWidget {
 
 class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   late TextEditingController _notesController;
-  final List<Map<String, double>> _currentSeries = [];
 
   @override
   void initState() {
     super.initState();
     _notesController = TextEditingController(text: widget.exercise.notesReglagesMachine);
-    // Commencer avec une série vide
-    _addSerie();
   }
 
-  void _addSerie() {
-    setState(() {
-      _currentSeries.add({'poids': 0, 'reps': 0});
-    });
-  }
-
-  void _removeSerie(int index) {
-    setState(() {
-      _currentSeries.removeAt(index);
-    });
-  }
-
-  Future<void> _saveSession() async {
+  Future<void> _saveNotes() async {
     final db = ref.read(databaseProvider);
     
     // 1. Sauvegarder les notes si elles ont changé
     if (_notesController.text != widget.exercise.notesReglagesMachine) {
       widget.exercise.notesReglagesMachine = _notesController.text;
       await db.saveExercise(widget.exercise);
-    }
-
-    // 2. Sauvegarder l'historique
-    if (_currentSeries.any((s) => (s['poids'] ?? 0) > 0 || (s['reps'] ?? 0) > 0)) {
-      final history = ExerciseHistory()
-        ..exerciseId = widget.exercise.id
-        ..date = DateTime.now()
-        ..series = jsonEncode(_currentSeries.where((s) => (s['poids'] ?? 0) > 0).toList());
-      
-      await db.saveHistory(history);
-      ref.invalidate(exerciseHistoryProvider(widget.exercise.id));
-      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Performance enregistrée !')),
+          const SnackBar(content: Text('Notes enregistrées !')),
         );
-        setState(() {
-          _currentSeries.clear();
-          _addSerie();
-        });
       }
     }
+  }
+
+  double _calculateMaxWeight(String seriesData) {
+    double maxW = 0.0;
+    try {
+      if (seriesData.startsWith('[')) {
+        final List<dynamic> decoded = jsonDecode(seriesData);
+        for (var s in decoded) {
+          final w = double.tryParse(s['poids'].toString()) ?? 0.0;
+          if (w > maxW) maxW = w;
+        }
+        return maxW;
+      }
+    } catch (_) {}
+
+    final parts = seriesData.split(',');
+    for (var p in parts) {
+      p = p.trim();
+      if (p.isEmpty) continue;
+      final xIndex = p.indexOf('x');
+      final kgIndex = p.indexOf('kg');
+      if (xIndex != -1) {
+        final weightStr = (kgIndex != -1 && kgIndex > xIndex) 
+            ? p.substring(xIndex + 1, kgIndex)
+            : p.substring(xIndex + 1);
+        final w = double.tryParse(weightStr.trim()) ?? 0.0;
+        if (w > maxW) maxW = w;
+      }
+    }
+    return maxW;
+  }
+
+  String _formatSeriesDisplay(String seriesData) {
+    try {
+      if (seriesData.startsWith('[')) {
+        final List<dynamic> decoded = jsonDecode(seriesData);
+        List<String> formatted = [];
+        for (int i = 0; i < decoded.length; i++) {
+          formatted.add('Série ${i+1}: ${decoded[i]['reps']}x${decoded[i]['poids']}kg');
+        }
+        return formatted.join(' | ');
+      }
+    } catch (_) {}
+
+    final parts = seriesData.split(',');
+    List<String> formatted = [];
+    for (int i = 0; i < parts.length; i++) {
+      formatted.add('Série ${i+1}: ${parts[i].trim()}');
+    }
+    return formatted.join(' | ');
   }
 
   @override
@@ -183,102 +203,179 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   Widget _buildViewMode(BuildContext context) {
     final historyAsync = ref.watch(exerciseHistoryProvider(widget.exercise.id));
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), // Adjusted padding
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Réglages / Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _notesController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'Ex: Hauteur siège 3, position pieds…',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text('Performance du jour', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 8),
-          ...List.generate(_currentSeries.length, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Row(
-                children: [
-                  CircleAvatar(radius: 14, child: Text('${index + 1}')),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Poids (kg)', border: OutlineInputBorder()),
-                      onChanged: (val) => _currentSeries[index]['poids'] = double.tryParse(val) ?? 0,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Reps', border: OutlineInputBorder()),
-                      onChanged: (val) => _currentSeries[index]['reps'] = double.tryParse(val) ?? 0,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                    onPressed: () => _removeSerie(index),
-                  ),
-                ],
+    return historyAsync.when(
+      data: (history) {
+        // history is sorted desc. Let's make an asc list for charting
+        final ascHistory = history.reversed.toList();
+        
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProgressChart(ascHistory),
+              const SizedBox(height: 24),
+
+              const Text('Réglages / Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _notesController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Ex: Hauteur siège 3, position pieds…',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
-            );
-          }),
-          TextButton.icon(
-            onPressed: _addSerie,
-            icon: const Icon(Icons.add),
-            label: const Text('Ajouter une série'),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _saveSession,
-              icon: const Icon(Icons.save),
-              label: const Text('Enregistrer la séance'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurpleAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton.icon(
+                  onPressed: _saveNotes,
+                  icon: const Icon(Icons.save, size: 18),
+                  label: const Text('Enregistrer les notes'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
               ),
-            ),
-          ),
-          const Divider(height: 48),
-          const Text('Historique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 8),
-          historyAsync.when(
-            data: (history) {
-              if (history.isEmpty) return const Text('Aucun historique pour le moment.');
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final item = history[index];
-                  final List<dynamic> series = jsonDecode(item.series);
-                  return Card(
-                    child: ListTile(
-                      title: Text('${item.date.day}/${item.date.month}/${item.date.year}'),
-                      subtitle: Text(
-                        series.map((s) => '${s['poids']}kg x ${s['reps']}').join(' | '),
+              const Divider(height: 32),
+              
+              const Text('Dernières performances', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              const SizedBox(height: 8),
+              if (history.isEmpty) 
+                const Text('Aucun historique pour le moment.', style: TextStyle(fontStyle: FontStyle.italic)),
+              if (history.isNotEmpty)
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: history.length > 3 ? 3 : history.length,
+                  itemBuilder: (context, index) {
+                    final item = history[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
+                          child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+                        ),
+                        title: Text('${item.date.day}/${item.date.month}/${item.date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(_formatSeriesDisplay(item.series)),
                       ),
-                    ),
-                  );
-                },
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, _) => Text('Erreur: $err'),
+                    );
+                  },
+                ),
+              if (history.length > 3)
+                Center(
+                  child: TextButton.icon(
+                    onPressed: () => _showFullHistory(context, history),
+                    icon: const Icon(Icons.list),
+                    label: const Text('Voir tout l\'historique'),
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Erreur: $err')),
+    );
+  }
+
+  Widget _buildProgressChart(List<ExerciseHistory> ascHistory) {
+    if (ascHistory.length < 2) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.withAlpha(20),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withAlpha(40)),
+        ),
+        child: const Column(
+          children: [
+            Icon(Icons.show_chart, color: Colors.grey, size: 40),
+            SizedBox(height: 8),
+            Text(
+              'Continuez à vous entraîner pour débloquer le graphique de progression.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final List<FlSpot> spots = [];
+    double minX = 0;
+    double maxX = (ascHistory.length - 1).toDouble();
+    double minY = double.infinity;
+    double maxY = 0;
+
+    for (int i = 0; i < ascHistory.length; i++) {
+      final maxW = _calculateMaxWeight(ascHistory[i].series);
+      spots.add(FlSpot(i.toDouble(), maxW));
+      if (maxW < minY) minY = maxW;
+      if (maxW > maxY) maxY = maxW;
+    }
+
+    if (minY == double.infinity) minY = 0;
+    minY = (minY - 5).clamp(0, double.infinity);
+    maxY += 5;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Progression de la charge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const SizedBox(height: 16),
+        Container(
+          height: 200,
+          padding: const EdgeInsets.fromLTRB(16, 24, 24, 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          ),
+          child: LineChart(
+            LineChartData(
+              gridData: const FlGridData(show: true, drawVerticalLine: false),
+              titlesData: FlTitlesData(
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    getTitlesWidget: (value, meta) {
+                      return Text('${value.toInt()}kg', style: const TextStyle(fontSize: 10, color: Colors.grey));
+                    },
+                  ),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              minX: minX,
+              maxX: maxX,
+              minY: minY,
+              maxY: maxY,
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: Theme.of(context).colorScheme.primary,
+                  barWidth: 3,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: true),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: Theme.of(context).colorScheme.primary.withAlpha(30),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -325,6 +422,54 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showFullHistory(BuildContext context, List<ExerciseHistory> fullHistory) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  const Text('Historique Complet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: fullHistory.length,
+                itemBuilder: (context, index) {
+                  final item = fullHistory[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
+                        child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+                      ),
+                      title: Text('${item.date.day}/${item.date.month}/${item.date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text(_formatSeriesDisplay(item.series)),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
