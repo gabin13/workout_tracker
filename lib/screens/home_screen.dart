@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../providers/program_provider.dart';
@@ -235,31 +236,41 @@ class HomeScreen extends ConsumerWidget {
                 children: [
             Expanded(
               flex: 1,
-              child: _buildSquareCard(
-                context,
-                title: 'Pas',
-                value: steps.toString(),
-                icon: Icons.directions_walk,
-                color: Colors.blueAccent,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
+              child: AnimatedTapSelector(
+                onTap: () => Navigator.push(context, CustomPageRoute(page: const StepsDetailsScreen())),
+                child: _buildSquareCard(
+                  context,
+                  title: 'Pas',
+                  value: steps.toString(),
+                  icon: Icons.directions_walk,
+                  color: Colors.blueAccent,
+                ),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               flex: 1,
-              child: _buildSquareCard(
-                context,
-                title: 'Brûlées',
-                value: '$calories kcal',
-                icon: Icons.local_fire_department,
-                color: Colors.orangeAccent,
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
+              child: AnimatedTapSelector(
+                onTap: () => Navigator.push(context, CustomPageRoute(page: const CaloriesDetailsScreen())),
+                child: _buildSquareCard(
+                  context,
+                  title: 'Brûlées',
+                  value: '$calories kcal',
+                  icon: Icons.local_fire_department,
+                  color: Colors.orangeAccent,
+                ),
               ),
             ),
           ],
             );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Row(
+              children: [
+                Expanded(child: ShimmerPlaceholderHealth()),
+                SizedBox(width: 16),
+                Expanded(child: ShimmerPlaceholderHealth()),
+              ],
+            ),
             error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
           ),
       ],
@@ -271,7 +282,6 @@ class HomeScreen extends ConsumerWidget {
     required String value,
     required IconData icon,
     required Color color,
-    required VoidCallback onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -286,41 +296,35 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-        onTap: onTap,
-        child: Stack(
-          children: [
-            Positioned(
-              right: 12,
-              top: 12,
-              child: Icon(Icons.chevron_right, color: color.withAlpha(150)),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 40, color: color),
-                    const SizedBox(height: 8),
-                    Text(
-                      title,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      value,
-                      style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: 12,
+            top: 12,
+            child: Icon(Icons.chevron_right, color: color.withAlpha(150)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 40, color: color),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -417,14 +421,14 @@ class HomeScreen extends ConsumerWidget {
                       ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => const Center(child: Text('Log non trouvé')),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => const Center(child: Text('Objectif non défini')),
-    ),
-    ],
+              loading: () => const ShimmerPlaceholderWorkout(), // Reusing the large skeleton for now
+              error: (err, _) => const Center(child: Text('Log non trouvé')),
+            );
+          },
+          loading: () => const ShimmerPlaceholderWorkout(),
+          error: (err, _) => const Center(child: Text('Objectif non défini')),
+        ),
+      ],
     );
   }
 }
