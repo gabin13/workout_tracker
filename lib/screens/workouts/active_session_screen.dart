@@ -103,11 +103,10 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Annuler'),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Valider', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-          ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Valider'),
+            ),
         ],
       ),
     );
@@ -411,11 +410,6 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _validerExercice(ae),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
                 icon: const Icon(Icons.save),
                 label: const Text('Valider cet exercice'),
               ),

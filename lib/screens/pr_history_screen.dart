@@ -36,7 +36,7 @@ class PRHistoryScreen extends ConsumerWidget {
                   title: Text('${record.poidsMax} kg', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   subtitle: Text('${record.date.day}/${record.date.month}/${record.date.year}'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: Icon(Icons.delete_outline, color: Colors.red[400]),
                     onPressed: () async {
                       await ref.read(databaseProvider).deleteRecord(record.id);
                       ref.invalidate(personalRecordsProvider(exerciseId));
@@ -53,7 +53,7 @@ class PRHistoryScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddPRDialog(context, ref),
         label: const Text('Ajouter un PR'),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
       ),
     );
   }

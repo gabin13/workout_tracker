@@ -105,11 +105,11 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
         title: Text(widget.exercise.nom),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: const Icon(Icons.edit_outlined),
             onPressed: () => _showEditExerciseDialog(context),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline),
+            icon: Icon(Icons.delete_outline, color: Colors.red[400]),
             onPressed: () => _confirmDeleteExercise(context),
           ),
         ],
@@ -441,7 +441,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
                   const Text('Historique Complet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close_rounded),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],

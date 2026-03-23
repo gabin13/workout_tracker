@@ -143,7 +143,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
         ],
@@ -392,10 +392,6 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   ref.invalidate(dailyNutritionLogProvider);
                   if (context.mounted) Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
                 child: const Text('Enregistrer'),
               ),
               if (existing != null)
@@ -486,10 +482,6 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
                   ref.invalidate(nutritionGoalProvider);
                   if (context.mounted) Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
                 child: const Text('Enregistrer'),
               ),
               const SizedBox(height: 20),

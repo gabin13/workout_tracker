@@ -169,15 +169,8 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => _showAssignProgramSheet(context, _selectedDay!),
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded),
                 label: const Text('Planifier un programme'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  elevation: 0,
-                ),
               ),
             ],
           ),
@@ -199,12 +192,12 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withAlpha(10), // Douce ombre
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withAlpha(20),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -250,26 +243,19 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                   children: [
                     TextButton.icon(
                       onPressed: () => _confirmDeleteSession(context, event),
-                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                      icon: Icon(Icons.delete_outline, color: Colors.red[400]),
                       label: const Text('Supprimer', style: TextStyle(color: Colors.redAccent)),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
+                    OutlinedButton.icon(
                       onPressed: () {
                          _showAssignProgramSheet(context, _selectedDay!, eventToDelete: event);
                       },
-                      icon: const Icon(Icons.edit, size: 18),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Modifier'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Theme.of(context).primaryColor,
-                        elevation: 0,
-                        side: BorderSide(color: Theme.of(context).primaryColor.withAlpha(50)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      ),
                     ),
                   ],
                 ),

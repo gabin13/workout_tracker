@@ -232,7 +232,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_exercise',
         onPressed: () => _showAddExerciseDialog(context, ref),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }
@@ -326,7 +326,7 @@ class _ProgrammesTab extends ConsumerWidget {
                   title: Text(p.nom, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
                   subtitle: Text('${p.exercises.length} exercice(s)', style: TextStyle(color: Colors.grey[500])),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: Icon(Icons.delete_outline, color: Colors.red[400]),
                     onPressed: () => _confirmDeleteProgram(context, ref, p),
                   ),
                   onTap: () {
@@ -348,7 +348,7 @@ class _ProgrammesTab extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_program',
         onPressed: () => _showAddProgramDialog(context, ref),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add_rounded),
       ),
     );
   }
@@ -362,7 +362,6 @@ class _ProgrammesTab extends ConsumerWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.pop(ctx);
               await ref.read(databaseProvider).deleteProgram(program.id);
@@ -454,12 +453,6 @@ class _ProgrammesTab extends ConsumerWidget {
                       if (context.mounted) Navigator.pop(context);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                   child: const Text('Créer le programme', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),

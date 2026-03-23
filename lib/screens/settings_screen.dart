@@ -153,8 +153,7 @@ class SettingsScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Annuler'),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          OutlinedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await ref.read(databaseProvider).clearAll();

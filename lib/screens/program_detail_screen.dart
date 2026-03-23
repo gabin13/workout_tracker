@@ -185,10 +185,6 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                 onPressed: () => _showAddExerciseSelector(context, allExercises),
                 icon: const Icon(Icons.add),
                 label: const Text('Ajouter un exercice'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                ),
               ),
               const SizedBox(height: 32),
             ],

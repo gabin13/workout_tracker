@@ -111,12 +111,6 @@ class _WeightDetailsScreenState extends ConsumerState<WeightDetailsScreen> {
                         _loadData();
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.greenAccent.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
                     child: const Text('Enregistrer'),
                   ),
                   const SizedBox(height: 20),
@@ -185,14 +179,8 @@ class _WeightDetailsScreenState extends ConsumerState<WeightDetailsScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: _showUpdateDialog,
-                icon: const Icon(Icons.add),
+                icon: const Icon(Icons.add_rounded),
                 label: const Text('Mettre à jour mon poids'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent.shade700,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
               ),
             ),
             const SizedBox(height: 32),
