@@ -145,7 +145,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
         ],
       ),
       child: Padding(
@@ -260,28 +260,52 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
         ],
       ),
       child: Material(
         color: Colors.transparent,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _getMealColor(type).withAlpha(25),
-              shape: BoxShape.circle,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => _showMealForm(context, ref, log, type, entries.isNotEmpty ? entries.first : null),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _getMealColor(type).withAlpha(25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: _getMealColor(type)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4), // Align vertically with icon center a bit better
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                      const SizedBox(height: 4),
+                      if (hasEntries)
+                        Text('$kcal kcal • ${prot}p ${gluc}g ${lip}l\n$notes', style: TextStyle(color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis)
+                      else
+                        Text('Aucun aliment saisi', style: TextStyle(color: Colors.grey[400])),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(hasEntries ? Icons.edit_outlined : Icons.add_circle_outline, color: Colors.grey),
+                  onPressed: () => _showMealForm(context, ref, log, type, entries.isNotEmpty ? entries.first : null),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  alignment: Alignment.topRight,
+                ),
+              ],
             ),
-            child: Icon(icon, color: _getMealColor(type)),
-          ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-          subtitle: hasEntries 
-            ? Text('$kcal kcal • ${prot}p ${gluc}g ${lip}l\n$notes', style: TextStyle(color: Colors.grey[600]), maxLines: 2, overflow: TextOverflow.ellipsis)
-            : Text('Aucun aliment saisi', style: TextStyle(color: Colors.grey[400])),
-          trailing: IconButton(
-            icon: Icon(hasEntries ? Icons.edit_outlined : Icons.add_circle_outline, color: Colors.grey),
-            onPressed: () => _showMealForm(context, ref, log, type, entries.isNotEmpty ? entries.first : null),
           ),
         ),
       ),

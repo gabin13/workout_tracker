@@ -52,7 +52,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
       body: exercisesAsync.when(
         data: (allExercises) {
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
             children: [
               TextField(
                 controller: _nameController,
@@ -97,7 +97,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
                         ],
                       ),
                       child: Padding(

@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF9F9F9),
+        scaffoldBackgroundColor: const Color(0xFFF2F2F7),
         primaryColor: const Color(0xFF5E5CE6),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF5E5CE6),
@@ -60,6 +60,9 @@ class MyApp extends StatelessWidget {
           color: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          color: Color(0xFF5E5CE6),
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
           backgroundColor: Colors.white,

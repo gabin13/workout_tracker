@@ -100,6 +100,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
     return Scaffold(
       body: Column(
         children: [
+          const SizedBox(height: 24),
           // Barre de recherche
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -193,7 +194,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
                         ],
                       ),
                       child: ListTile(
@@ -299,6 +300,7 @@ class _ProgrammesTab extends ConsumerWidget {
             return const Center(child: Text('Aucun programme. Créez-en un !'));
           }
           return ListView.builder(
+            padding: const EdgeInsets.only(top: 24),
             itemCount: programs.length,
             itemBuilder: (context, index) {
               final p = programs[index];
@@ -308,7 +310,7 @@ class _ProgrammesTab extends ConsumerWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 12, offset: const Offset(0, 6)),
                   ],
                 ),
                 child: ListTile(
