@@ -52,6 +52,9 @@ class _ExosScreenState extends ConsumerState<ExosScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: Theme.of(context).primaryColor,
+          unselectedLabelColor: Colors.grey[500],
+          indicatorColor: Theme.of(context).primaryColor,
           tabs: const [
             Tab(icon: Icon(Icons.fitness_center), text: 'Exercices'),
             Tab(icon: Icon(Icons.list_alt), text: 'Programmes'),
@@ -104,10 +107,13 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Rechercher un exercice...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: Colors.grey[500]),
+                prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                filled: true,
+                fillColor: Colors.grey[100],
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, color: Colors.grey[500]),
                         onPressed: () {
                           setState(() {
                             _searchQuery = '';
@@ -116,7 +122,7 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.circular(30)),
                 isDense: true,
               ),
               onChanged: (val) => setState(() => _searchQuery = val),
@@ -134,12 +140,28 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
                 final isSelected = _selectedMuscle == muscle;
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: Text(muscle),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) setState(() => _selectedMuscle = muscle);
-                    },
+                  child: Theme(
+                    data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
+                    child: ChoiceChip(
+                      label: Text(muscle),
+                      selected: isSelected,
+                      selectedColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                      backgroundColor: Colors.white,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Theme.of(context).primaryColor : Colors.grey[500],
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: isSelected 
+                            ? BorderSide.none 
+                            : BorderSide(color: Colors.grey.shade300),
+                      ),
+                      showCheckmark: false,
+                      onSelected: (selected) {
+                        if (selected) setState(() => _selectedMuscle = muscle);
+                      },
+                    ),
                   ),
                 );
               },
@@ -165,22 +187,36 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final ex = filtered[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        child: const Icon(Icons.fitness_center),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
                       ),
-                      title: Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(ex.musclePrincipal),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ExerciseDetailScreen(exercise: ex),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor.withAlpha(25),
+                            shape: BoxShape.circle,
                           ),
-                        );
-                      },
+                          child: Icon(Icons.fitness_center, color: Theme.of(context).primaryColor),
+                        ),
+                        title: Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                        subtitle: Text(ex.musclePrincipal, style: TextStyle(color: Colors.grey[500])),
+                        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ExerciseDetailScreen(exercise: ex),
+                            ),
+                          );
+                        },
+                      ),
                     );
                   },
                 );
@@ -266,22 +302,39 @@ class _ProgrammesTab extends ConsumerWidget {
             itemCount: programs.length,
             itemBuilder: (context, index) {
               final p = programs[index];
-              return ListTile(
-                leading: const Icon(Icons.list_alt, color: Colors.deepPurpleAccent),
-                title: Text(p.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text('${p.exercises.length} exercice(s)'),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => _confirmDeleteProgram(context, ref, p),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12, left: 16, right: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProgramDetailScreen(program: p),
+                child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withAlpha(25),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
+                    child: Icon(Icons.list_alt, color: Theme.of(context).primaryColor),
+                  ),
+                  title: Text(p.nom, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                  subtitle: Text('${p.exercises.length} exercice(s)', style: TextStyle(color: Colors.grey[500])),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    onPressed: () => _confirmDeleteProgram(context, ref, p),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProgramDetailScreen(program: p),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );
@@ -327,61 +380,88 @@ class _ProgrammesTab extends ConsumerWidget {
     final nomCtrl = TextEditingController();
     final List<int> selectedIds = [];
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Nouveau Programme'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(controller: nomCtrl, decoration: const InputDecoration(labelText: 'Nom du programme')),
-                const SizedBox(height: 16),
-                const Text('Sélectionner des exercices :', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: exercises.length,
-                    itemBuilder: (context, index) {
-                      final ex = exercises[index];
-                      final isSelected = selectedIds.contains(ex.id);
-                      return CheckboxListTile(
-                        title: Text(ex.nom),
-                        value: isSelected,
-                        onChanged: (val) {
-                          setDialogState(() {
-                            if (val == true) {
-                              selectedIds.add(ex.id);
-                            } else {
-                              selectedIds.remove(ex.id);
-                            }
-                          });
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+        builder: (context, setDialogState) => Padding(
+          padding: EdgeInsets.only(
+            left: 16, right: 16, top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-            ElevatedButton(
-              onPressed: () async {
-                if (nomCtrl.text.isNotEmpty && selectedIds.isNotEmpty) {
-                  final p = WorkoutProgram()
-                    ..nom = nomCtrl.text
-                    ..exercises = selectedIds.map((id) => ProgramExercise()..exerciseId = id).toList();
-                  await ref.read(databaseProvider).saveProgram(p);
-                  ref.invalidate(workoutProgramsProvider);
-                  if (context.mounted) Navigator.pop(context);
-                }
-              },
-              child: const Text('Créer'),
-            ),
-          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Nouveau Programme', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nomCtrl, 
+                decoration: InputDecoration(
+                  labelText: 'Nom du programme',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Sélectionner des exercices :', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87))
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: exercises.length,
+                  itemBuilder: (context, index) {
+                    final ex = exercises[index];
+                    final isSelected = selectedIds.contains(ex.id);
+                    return CheckboxListTile(
+                      title: Text(ex.nom, style: const TextStyle(color: Colors.black87)),
+                      value: isSelected,
+                      activeColor: Theme.of(context).primaryColor,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (val) {
+                        setDialogState(() {
+                          if (val == true) {
+                            selectedIds.add(ex.id);
+                          } else {
+                            selectedIds.remove(ex.id);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (nomCtrl.text.isNotEmpty && selectedIds.isNotEmpty) {
+                      final p = WorkoutProgram()
+                        ..nom = nomCtrl.text
+                        ..exercises = selectedIds.map((id) => ProgramExercise()..exerciseId = id).toList();
+                      await ref.read(databaseProvider).saveProgram(p);
+                      ref.invalidate(workoutProgramsProvider);
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text('Créer le programme', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

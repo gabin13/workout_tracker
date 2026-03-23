@@ -56,9 +56,11 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             children: [
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Nom du programme',
-                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),
               const SizedBox(height: 24),
@@ -88,11 +90,18 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                       orElse: () => Exercise()..nom = 'Exercice inconnu',
                     );
 
-                    return Card(
+                    return Container(
                       key: ValueKey('prog_ex_${progEx.exerciseId}_$index'),
                       margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, 4)),
+                        ],
+                      ),
                       child: Padding(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -103,50 +112,65 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                                   children: [
                                     const Icon(Icons.drag_handle, color: Colors.grey),
                                     const SizedBox(width: 8),
-                                    Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text(ex.nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
                                   ],
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.red),
+                                  icon: const Icon(Icons.close, color: Colors.grey),
                                   onPressed: () {
                                     setState(() {
                                       widget.program.exercises.remove(progEx);
                                     });
                                   },
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             Row(
                               children: [
-                                Expanded(
+                                const Text('Objectif : ', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500)),
+                                SizedBox(
+                                  width: 40,
                                   child: TextFormField(
                                     initialValue: progEx.targetSets?.toString() ?? '',
                                     keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Séries à viser',
-                                      border: OutlineInputBorder(),
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
                                       isDense: true,
+                                      filled: true,
+                                      fillColor: Colors.grey[100],
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                                     ),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                     onChanged: (val) {
                                       progEx.targetSets = int.tryParse(val);
                                     },
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
+                                const Text(' séries de ', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500)),
+                                SizedBox(
+                                  width: 60,
                                   child: TextFormField(
                                     initialValue: progEx.targetReps ?? '',
-                                    decoration: const InputDecoration(
-                                      labelText: 'Reps (ex: 8-10)',
-                                      border: OutlineInputBorder(),
+                                    keyboardType: TextInputType.number,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
                                       isDense: true,
+                                      filled: true,
+                                      fillColor: Colors.grey[100],
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                                     ),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                     onChanged: (val) {
                                       progEx.targetReps = val;
                                     },
                                   ),
                                 ),
+                                const Text(' reps', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -180,6 +204,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -192,7 +217,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
               children: [
                 const Padding(
                   padding: EdgeInsets.all(16.0),
-                  child: Text('Choisir un exercice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: Text('Choisir un exercice', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
                 ),
                 Expanded(
                   child: ListView.builder(
@@ -204,13 +229,17 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                       final isAlreadyIn = widget.program.exercises.any((pe) => pe.exerciseId == ex.id);
                       
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.grey.shade100,
-                          child: Icon(Icons.fitness_center, color: isAlreadyIn ? Colors.grey : Colors.deepPurpleAccent),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isAlreadyIn ? Colors.grey.shade100 : Theme.of(context).primaryColor.withAlpha(25),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.fitness_center, color: isAlreadyIn ? Colors.grey : Theme.of(context).primaryColor),
                         ),
-                        title: Text(ex.nom, style: TextStyle(color: isAlreadyIn ? Colors.grey : Colors.black)),
-                        subtitle: Text(ex.musclePrincipal),
-                        trailing: isAlreadyIn ? const Icon(Icons.check, color: Colors.green) : null,
+                        title: Text(ex.nom, style: TextStyle(color: isAlreadyIn ? Colors.grey : Colors.black87, fontWeight: FontWeight.bold)),
+                        subtitle: Text(ex.musclePrincipal, style: TextStyle(color: Colors.grey[500])),
+                        trailing: isAlreadyIn ? Icon(Icons.check, color: Theme.of(context).primaryColor) : null,
                         onTap: isAlreadyIn ? null : () {
                           setState(() {
                             widget.program.exercises.add(ProgramExercise()..exerciseId = ex.id);
