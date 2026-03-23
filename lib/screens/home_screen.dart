@@ -33,30 +33,23 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- SECTION HAUT : Séance du jour (Haut fixe) ---
-              SizedBox(
-                height: 160,
-                child: _buildTopSection(context, ref),
-              ),
+              // --- SECTION HAUT : Séance du jour ---
+              _buildTopSection(context, ref),
               const SizedBox(height: 16),
               
-              // --- SECTION MILIEU : Mini Dashboard Santé (Flex 1) ---
-              Expanded(
-                flex: 1,
-                child: _buildMiddleSection(context, ref),
-              ),
+              // --- SECTION MILIEU : Mini Dashboard Santé ---
+              _buildMiddleSection(context, ref),
               const SizedBox(height: 16),
 
-              // --- SECTION BAS : Mini Dashboard Nutrition (Flex 1) ---
-              Expanded(
-                flex: 1,
-                child: _buildBottomSection(context, ref),
-              ),
+              // --- SECTION BAS : Mini Dashboard Nutrition ---
+              _buildBottomSection(context, ref),
+              
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -166,6 +159,8 @@ class HomeScreen extends ConsumerWidget {
     Widget? bottomWidget,
   }) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: colors,
@@ -281,6 +276,7 @@ class HomeScreen extends ConsumerWidget {
     required VoidCallback onTap,
   }) {
     return Container(
+      height: 130,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
