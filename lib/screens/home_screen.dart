@@ -8,6 +8,8 @@ import '../providers/nutrition_provider.dart';
 import 'settings_screen.dart';
 import 'workouts/active_session_screen.dart';
 import 'main_screen.dart'; // Pour le provider d'index
+import 'health/steps_details_screen.dart';
+import 'health/calories_details_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -36,9 +38,9 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- SECTION HAUT : Séance du jour (Flex 2) ---
-              Expanded(
-                flex: 2,
+              // --- SECTION HAUT : Séance du jour (Haut fixe) ---
+              SizedBox(
+                height: 160,
                 child: _buildTopSection(context, ref),
               ),
               const SizedBox(height: 16),
@@ -245,7 +247,7 @@ class HomeScreen extends ConsumerWidget {
                 value: steps.toString(),
                 icon: Icons.directions_walk,
                 color: Colors.blueAccent,
-                onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
               ),
             ),
             const SizedBox(width: 16),
@@ -257,7 +259,7 @@ class HomeScreen extends ConsumerWidget {
                 value: '$calories kcal',
                 icon: Icons.local_fire_department,
                 color: Colors.orangeAccent,
-                onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
               ),
             ),
           ],
@@ -336,18 +338,13 @@ class HomeScreen extends ConsumerWidget {
 
     return Column(
       children: [
-        // En-tête interactif Nutrition
-        InkWell(
-          onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                Text('Nutrition', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
-                const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
-              ],
-            ),
+        // En-tête Nutrition
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            children: [
+              Text('Nutrition', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
+            ],
           ),
         ),
         const SizedBox(height: 8),
