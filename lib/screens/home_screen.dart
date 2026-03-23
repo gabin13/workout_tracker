@@ -11,6 +11,7 @@ import 'workouts/active_session_screen.dart';
 import 'main_screen.dart'; // Pour le provider d'index
 import 'health/steps_details_screen.dart';
 import 'health/calories_details_screen.dart';
+import '../utils/ux_utils.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -27,7 +28,7 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                CustomPageRoute(page: const SettingsScreen()),
               );
             },
           ),
@@ -96,26 +97,34 @@ class HomeScreen extends ConsumerWidget {
             }
 
             if (todaySession.isCompleted) {
-              return _buildWorkOutCard(
-                context,
-                title: 'Séance Validée ✅',
-                subtitle: program.nom.toUpperCase(),
-                icon: Icons.emoji_events,
-                colors: [Colors.green.shade400, Colors.green.shade800],
-                bottomWidget: Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    '${program.exercises.length} exercices réalisés',
-                    style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+              return AnimatedTapSelector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  // Naviguer vers l'écran de détails si nécessaire (actuellement rien)
+                },
+                child: _buildWorkOutCard(
+                  context,
+                  title: 'Séance Validée ✅',
+                  subtitle: program.nom.toUpperCase(),
+                  icon: Icons.emoji_events,
+                  colors: [Colors.green.shade400, Colors.green.shade800],
+                  bottomWidget: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      '${program.exercises.length} exercices réalisés',
+                      style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+                    ),
                   ),
                 ),
               );
             }
 
             // Séance prévue
-            return _buildWorkOutCard(
-              context,
-              title: 'Séance du jour',
+            return AnimatedTapSelector(
+              onTap: () {}, // Handled by button
+              child: _buildWorkOutCard(
+                context,
+                title: 'Séance du jour',
               subtitle: program.nom.toUpperCase(),
               icon: Icons.fitness_center,
               colors: [Theme.of(context).primaryColor, Colors.indigo],
@@ -123,6 +132,7 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 16.0),
                 child: ElevatedButton.icon(
                   onPressed: () {
+                    HapticFeedback.mediumImpact();
                     Navigator.push(
                       context,
                       CustomPageRoute(
@@ -144,11 +154,11 @@ class HomeScreen extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const ShimmerPlaceholderWorkout(),
           error: (err, _) => Center(child: Text('Erreur: $err')),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const ShimmerPlaceholderWorkout(),
       error: (err, _) => Center(child: Text('Erreur: $err')),
     );
   }
