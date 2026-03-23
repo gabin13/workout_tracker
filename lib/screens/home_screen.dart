@@ -121,7 +121,7 @@ class HomeScreen extends ConsumerWidget {
               title: 'Séance du jour',
               subtitle: program.nom.toUpperCase(),
               icon: Icons.fitness_center,
-              colors: [Colors.deepPurpleAccent.shade200, Colors.deepPurpleAccent.shade700],
+              colors: [Theme.of(context).primaryColor, Colors.indigo],
               bottomWidget: Padding(
                 padding: const EdgeInsets.only(top: 16.0),
                 child: ElevatedButton.icon(
@@ -136,11 +136,12 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.play_arrow, color: Colors.deepPurpleAccent),
-                  label: const Text('Démarrer la séance', style: TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold)),
+                  icon: Icon(Icons.play_arrow, color: Theme.of(context).primaryColor),
+                  label: Text('Démarrer la séance', style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 0,
                   ),
                 ),
               ),
@@ -172,9 +173,9 @@ class HomeScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colors.last.withAlpha(80),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: colors.last.withAlpha(25),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -256,15 +257,22 @@ class HomeScreen extends ConsumerWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 0,
-      color: color.withAlpha(25),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: color.withAlpha(70), width: 1.5),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(10), // Ultra léger (4%)
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
         onTap: onTap,
         child: Stack(
           children: [
@@ -281,17 +289,18 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     title,
-                    style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -317,53 +326,64 @@ class HomeScreen extends ConsumerWidget {
             final progress = goal.calories > 0 ? (totalEaten / goal.calories) : 0.0;
             final isOver = totalEaten > goal.calories;
 
-            return Card(
-              elevation: 0,
-              color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(10),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.restaurant, color: Colors.green, size: 28),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Nutrition',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-                          const Spacer(),
-                          Text(
-                            '$totalEaten / ${goal.calories} kcal',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isOver ? Colors.redAccent : Colors.green,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.restaurant, color: Colors.green, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Nutrition',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 18, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                            const Spacer(),
+                            Text(
+                              '$totalEaten / ${goal.calories} kcal',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isOver ? Colors.redAccent : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            value: progress.clamp(0.0, 1.0),
+                            minHeight: 8,
+                            backgroundColor: Colors.grey[200],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isOver ? Colors.redAccent : Colors.green,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: LinearProgressIndicator(
-                          value: progress.clamp(0.0, 1.0),
-                          minHeight: 12,
-                          backgroundColor: Colors.grey.withAlpha(50),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            isOver ? Colors.redAccent : Colors.greenAccent.shade700,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
