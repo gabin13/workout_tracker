@@ -31,35 +31,35 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     return Scaffold(
       body: _screens[currentIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: (index) {
           ref.read(navigationIndexProvider.notifier).state = index;
         },
-        destinations: const [
-          NavigationDestination(
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            activeIcon: Icon(Icons.home),
             label: 'Accueil',
           ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
+            activeIcon: Icon(Icons.calendar_month),
             label: 'Planning',
           ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center),
+            activeIcon: Icon(Icons.fitness_center),
             label: 'Exos',
           ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.favorite_outline),
-            selectedIcon: Icon(Icons.favorite),
+            activeIcon: Icon(Icons.favorite),
             label: 'Santé',
           ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_outlined),
-            selectedIcon: Icon(Icons.restaurant),
+            activeIcon: Icon(Icons.restaurant),
             label: 'Nutrition',
           ),
         ],
