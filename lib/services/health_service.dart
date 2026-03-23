@@ -102,4 +102,52 @@ class HealthService {
       return {'steps': [], 'calories': []};
     }
   }
+
+  // --- Nouvelles Méthodes Phase 12 ---
+
+  Future<List<Map<String, dynamic>>> getStepsForWeek(DateTime startOfWeek) async {
+    return _getDataForWeek(startOfWeek, HealthDataType.STEPS);
+  }
+
+  Future<List<Map<String, dynamic>>> getCaloriesForWeek(DateTime startOfWeek) async {
+    return _getDataForWeek(startOfWeek, HealthDataType.ACTIVE_ENERGY_BURNED);
+  }
+
+  Future<List<Map<String, dynamic>>> _getDataForWeek(DateTime startOfWeek, HealthDataType type) async {
+    try {
+      final endOfWeek = startOfWeek.add(const Duration(days: 7));
+      final now = DateTime.now();
+      final endTime = endOfWeek.isAfter(now) ? now : endOfWeek;
+
+      List<HealthDataPoint> data = await _health.getHealthDataFromTypes(
+        types: [type],
+        startTime: startOfWeek,
+        endTime: endTime,
+      );
+
+      Map<String, double> dailyData = {};
+
+      for (var p in data) {
+        final dateKey = "${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}";
+        final value = double.tryParse(p.value.toString()) ?? 0.0;
+        dailyData[dateKey] = (dailyData[dateKey] ?? 0) + value;
+      }
+
+      List<Map<String, dynamic>> resultList = [];
+      for (int i = 0; i < 7; i++) {
+        final date = startOfWeek.add(Duration(days: i));
+        final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+        resultList.add({'date': date, 'value': dailyData[dateKey] ?? 0.0});
+      }
+
+      return resultList;
+    } catch (e) {
+      // Retourne une liste vide de 7 jours en cas d'erreur ou d'absence de données pour éviter des crashes
+      List<Map<String, dynamic>> emptyList = [];
+      for (int i = 0; i < 7; i++) {
+        emptyList.add({'date': startOfWeek.add(Duration(days: i)), 'value': 0.0});
+      }
+      return emptyList;
+    }
+  }
 }

@@ -4,7 +4,9 @@ import '../services/health_service.dart';
 import '../providers/database_provider.dart';
 import '../models/body_measurement.dart';
 import 'settings_screen.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'health/weight_details_screen.dart';
+import 'health/steps_details_screen.dart';
+import 'health/calories_details_screen.dart';
 
 final healthServiceProvider = Provider((ref) => HealthService());
 
@@ -19,9 +21,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
   bool _isAuthorized = false;
   bool _isLoading = true;
   Map<String, dynamic> _healthData = {};
-  Map<String, List<Map<String, dynamic>>> _weeklyData = {};
   BodyMeasurement? _latestMeasurement;
-  List<Map<String, dynamic>> _weightHistory = [];
 
   @override
   void initState() {
@@ -40,34 +40,26 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     
     // Récupérer les mesures manuelles
     final measurements = await db.getAllMeasurements();
-    List<Map<String, dynamic>> weightHist = [];
     
     if (measurements.isNotEmpty) {
       measurements.sort((a, b) => b.date.compareTo(a.date));
       _latestMeasurement = measurements.first;
       
-      // Construire l'historique de poids pour le graph (ex: 7 ou X dernières entrées)
-      for (var m in measurements.take(7).toList().reversed) {
-        weightHist.add({'date': m.date, 'value': m.poids});
-      }
+      // On garde uniquement la dernière mesure pour ce dashboard
     } else {
       _latestMeasurement = null;
     }
     
     if (authorized) {
       final data = await service.fetchHealthData();
-      final weeklyData = await service.fetchWeeklyHistory();
       setState(() {
         _isAuthorized = true;
         _healthData = data;
-        _weeklyData = weeklyData;
-        _weightHistory = weightHist;
         _isLoading = false;
       });
     } else {
       setState(() {
         _isAuthorized = false;
-        _weightHistory = weightHist;
         _isLoading = false;
       });
     }
@@ -161,10 +153,6 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Mesures Corporelles', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.blueAccent),
-                    onPressed: _showAddMeasurementDialog,
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -177,6 +165,9 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: 'kg',
                       icon: Icons.monitor_weight_outlined,
                       color: Colors.greenAccent.shade700,
+                      onTap: () {
+                         Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightDetailsScreen())).then((_) => _checkPermissionsAndFetch());
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -187,6 +178,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: 'cm',
                       icon: Icons.height,
                       color: Colors.purpleAccent,
+                      onTap: _showAddMeasurementDialog, // Garde cette fonction modifiée pour la taille
                     ),
                   ),
                 ],
@@ -211,6 +203,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: '',
                       icon: Icons.directions_walk,
                       color: Colors.blueAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -221,39 +214,12 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: 'kcal',
                       icon: Icons.local_fire_department,
                       color: Colors.orangeAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-
-              // --- 4. GRAPHIQUES D'ÉVOLUTION ---
-              const Text('Évolution', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              // Graphique Poids
-              if (_weightHistory.isNotEmpty) ...[
-                _buildChartContainer(
-                  title: 'Évolution du Poids',
-                  color: Colors.greenAccent.shade700,
-                  data: _weightHistory,
-                ),
-                const SizedBox(height: 16),
-              ],
-              // Graphique des Pas
-              if (_weeklyData['steps'] != null && _weeklyData['steps']!.isNotEmpty)
-                _buildChartContainer(
-                  title: 'Pas',
-                  color: Colors.blueAccent,
-                  data: _weeklyData['steps']!,
-                ),
-              const SizedBox(height: 16),
-              // Graphique des Calories
-              if (_weeklyData['calories'] != null && _weeklyData['calories']!.isNotEmpty)
-                _buildChartContainer(
-                  title: 'Calories',
-                  color: Colors.orangeAccent,
-                  data: _weeklyData['calories']!,
-                ),
             ],
           ),
         ),
@@ -324,140 +290,20 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     );
   }
 
-  Widget _buildChartContainer({required String title, required Color color, required List<Map<String, dynamic>> data}) {
-    // Si toutes les valeurs sont à 0, ne pas afficher le graph ou l'afficher vide avec indication
-    if (data.isEmpty) return const SizedBox.shrink();
-
-    bool allZero = data.every((e) => e['value'] == 0);
-    List<FlSpot> spots = [];
-    double minY = double.infinity;
-    double maxY = -double.infinity;
-
-    if (!allZero) {
-      for (int i = 0; i < data.length; i++) {
-        double val = data[i]['value'] as double;
-        spots.add(FlSpot(i.toDouble(), val));
-        if (val < minY) minY = val;
-        if (val > maxY) maxY = val;
-      }
-    } else {
-      for (int i = 0; i < data.length; i++) {
-        spots.add(FlSpot(i.toDouble(), 0));
-      }
-      minY = 0;
-      maxY = 1;
-    }
-
-    // Ajuster l'échelle pour que ça respire (spécialement pour le poids où la diff est minime)
-    double range = maxY - minY;
-    if (range < 2) range = 2; // Éviter une échelle trop plate
-    maxY = maxY + (range * 0.1);
-    minY = minY > (range * 0.1) ? minY - (range * 0.1) : 0;
-
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.withAlpha(50), width: 1.0), // Corrected border side
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.timeline, color: color, size: 20),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              height: 180,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: FlTitlesData(
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          if (value.toInt() >= 0 && value.toInt() < data.length) {
-                             DateTime d = data[value.toInt()]['date'];
-                             final text = '${d.day}/${d.month}';
-                             return Padding(
-                               padding: const EdgeInsets.only(top: 8.0),
-                               child: Text(text, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                             );
-                          }
-                          return const Text('');
-                        },
-                        reservedSize: 30,
-                      )
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 40,
-                        getTitlesWidget: (value, meta) {
-                          if (value == 0) return const SizedBox.shrink();
-                          return Text(
-                            value >= 1000 ? '${(value/1000).toStringAsFixed(1)}k' : value.toStringAsFixed(0),
-                            style: const TextStyle(fontSize: 10, color: Colors.grey)
-                          );
-                        }
-                      )
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: data.isNotEmpty ? (data.length - 1).toDouble() : 0,
-                  minY: 0,
-                  maxY: maxY,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: color,
-                      barWidth: 3,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: true),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: color.withAlpha(30),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildChartContainer supprimé
 
   void _showAddMeasurementDialog() {
-    final poidsController = TextEditingController(text: _latestMeasurement?.poids.toString());
     final tailleController = TextEditingController(text: _latestMeasurement?.taille?.toString());
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Nouvelles mesures'),
+        title: const Text('Ma Taille'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: poidsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Poids (kg)'),
-            ),
-            const SizedBox(height: 12),
+            const Text('Modifier uniquement votre taille, le poids se modifie sur sa page dédiée.', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 16),
             TextField(
               controller: tailleController,
               keyboardType: TextInputType.number,
@@ -469,14 +315,12 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
           ElevatedButton(
             onPressed: () async {
-              final poids = double.tryParse(poidsController.text);
               final taille = double.tryParse(tailleController.text);
-              
-              if (poids != null) {
+              if (taille != null) {
                 final bm = BodyMeasurement()
                   ..date = DateTime.now()
-                  ..poids = poids
-                  ..taille = taille;
+                  ..taille = taille
+                  ..poids = _latestMeasurement?.poids ?? 0.0; // Conserve le dernier poids connu
                   
                 await ref.read(databaseProvider).saveMeasurement(bm);
                 _checkPermissionsAndFetch(); // Refresh
@@ -496,6 +340,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
     required String unit,
     required IconData icon,
     required Color color,
+    Function()? onTap,
   }) {
     return Card(
       elevation: 0,
@@ -504,37 +349,41 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: color.withAlpha((0.3 * 255).toInt()), width: 1),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 40),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(color: color, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  value,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                if (unit.isNotEmpty) ...[
-                  const SizedBox(width: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 40),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
                   Text(
-                    unit,
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    value,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
+                  if (unit.isNotEmpty) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      unit,
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

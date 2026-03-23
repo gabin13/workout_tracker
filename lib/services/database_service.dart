@@ -8,14 +8,8 @@ import '../models/personal_record.dart';
 import '../models/nutrition.dart';
 import '../models/body_measurement.dart';
 
-import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../models/workout_set.dart';
-import '../models/scheduled_workout.dart';
-import '../models/workout_program.dart';
-import '../models/exercise_history.dart';
-import '../models/personal_record.dart';
-import '../models/nutrition.dart';
 
 class DatabaseService {
   late Isar isar;
@@ -199,5 +193,13 @@ class DatabaseService {
 
   Future<List<BodyMeasurement>> getAllMeasurements() async {
     return await isar.bodyMeasurements.where().findAll();
+  }
+
+  Future<List<BodyMeasurement>> getWeightHistory(int days) async {
+    final threshold = DateTime.now().subtract(Duration(days: days));
+    final allMeasurements = await isar.bodyMeasurements.where().findAll();
+    final recent = allMeasurements.where((m) => m.date.isAfter(threshold)).toList();
+    recent.sort((a, b) => b.date.compareTo(a.date));
+    return recent;
   }
 }
