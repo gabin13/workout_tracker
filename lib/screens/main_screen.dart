@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import 'exos_screen.dart';
 import 'planning_screen.dart';
 import 'health_screen.dart';
 import 'nutrition_screen.dart';
 
-class MainScreen extends StatefulWidget {
+final navigationIndexProvider = StateProvider<int>((ref) => 0);
+
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+class _MainScreenState extends ConsumerState<MainScreen> {
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -25,14 +27,14 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(navigationIndexProvider);
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: _screens[currentIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          ref.read(navigationIndexProvider.notifier).state = index;
         },
         destinations: const [
           NavigationDestination(

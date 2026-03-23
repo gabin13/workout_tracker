@@ -6,6 +6,8 @@ import '../providers/scheduled_workout_provider.dart';
 import '../providers/health_provider.dart';
 import '../providers/nutrition_provider.dart';
 import 'settings_screen.dart';
+import 'workouts/active_session_screen.dart';
+import 'main_screen.dart'; // Pour le provider d'index
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -96,6 +98,23 @@ class HomeScreen extends ConsumerWidget {
               );
             }
 
+            if (todaySession.isCompleted) {
+              return _buildWorkOutCard(
+                context,
+                title: 'Séance Validée ✅',
+                subtitle: program.nom.toUpperCase(),
+                icon: Icons.emoji_events,
+                colors: [Colors.green.shade400, Colors.green.shade800],
+                bottomWidget: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    '${program.exercises.length} exercices réalisés',
+                    style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              );
+            }
+
             // Séance prévue
             return _buildWorkOutCard(
               context,
@@ -103,6 +122,28 @@ class HomeScreen extends ConsumerWidget {
               subtitle: program.nom.toUpperCase(),
               icon: Icons.fitness_center,
               colors: [Colors.deepPurpleAccent.shade200, Colors.deepPurpleAccent.shade700],
+              bottomWidget: Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ActiveSessionScreen(
+                          session: todaySession,
+                          program: program,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.play_arrow, color: Colors.deepPurpleAccent),
+                  label: const Text('Démarrer la séance', style: TextStyle(color: Colors.deepPurpleAccent, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
+                ),
+              ),
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -119,6 +160,7 @@ class HomeScreen extends ConsumerWidget {
     required String subtitle,
     required IconData icon,
     required List<Color> colors,
+    Widget? bottomWidget,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -140,21 +182,22 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: Colors.white.withAlpha(200)),
-            const SizedBox(height: 16),
+            Icon(icon, size: 50, color: Colors.white.withAlpha(200)),
+            const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             if (subtitle.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle,
-                style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
                 textAlign: TextAlign.center,
               ),
-            ]
+            ],
+            if (bottomWidget != null) bottomWidget,
           ],
         ),
       ),
@@ -177,23 +220,25 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Expanded(
               flex: 1,
-              child: _buildSquareHealthCard(
+              child: _buildSquareCard(
                 context,
                 title: 'Pas',
                 value: steps.toString(),
                 icon: Icons.directions_walk,
                 color: Colors.blueAccent,
+                onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               flex: 1,
-              child: _buildSquareHealthCard(
+              child: _buildSquareCard(
                 context,
                 title: 'Brûlées',
                 value: '$calories kcal',
                 icon: Icons.local_fire_department,
                 color: Colors.orangeAccent,
+                onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
               ),
             ),
           ],
@@ -204,11 +249,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSquareHealthCard(BuildContext context, {
+  Widget _buildSquareCard(BuildContext context, {
     required String title,
     required String value,
     required IconData icon,
     required Color color,
+    required VoidCallback onTap,
   }) {
     return Card(
       elevation: 0,
@@ -217,21 +263,36 @@ class HomeScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(color: color.withAlpha(70), width: 1.5),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 40, color: color),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Stack(
+          children: [
+            Positioned(
+              right: 12,
+              top: 12,
+              child: Icon(Icons.chevron_right, color: color.withAlpha(150)),
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 40, color: color),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -260,44 +321,50 @@ class HomeScreen extends ConsumerWidget {
               elevation: 0,
               color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.restaurant, color: Colors.green, size: 28),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Nutrition',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '$totalEaten / ${goal.calories} kcal',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isOver ? Colors.redAccent : Colors.green,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.restaurant, color: Colors.green, size: 28),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Nutrition',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                          const Spacer(),
+                          Text(
+                            '$totalEaten / ${goal.calories} kcal',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isOver ? Colors.redAccent : Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: progress.clamp(0.0, 1.0),
+                          minHeight: 12,
+                          backgroundColor: Colors.grey.withAlpha(50),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isOver ? Colors.redAccent : Colors.greenAccent.shade700,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        minHeight: 12,
-                        backgroundColor: Colors.grey.withAlpha(50),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          isOver ? Colors.redAccent : Colors.greenAccent.shade700,
-                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
