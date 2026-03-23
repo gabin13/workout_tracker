@@ -109,12 +109,10 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     return prsAsync.when(
       data: (prs) {
         double maxWeight = 0;
-        int maxReps = 0;
         
         for (var pr in prs) {
           if (pr.poidsMax > maxWeight) {
             maxWeight = pr.poidsMax;
-            maxReps = pr.reps;
           }
         }
 
@@ -161,17 +159,9 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
                         ),
                         const SizedBox(height: 4),
                         if (hasPR)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                '${maxWeight.toStringAsFixed(maxWeight % 1 == 0 ? 0 : 1)} kg',
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
-                              ),
-                              const SizedBox(width: 8),
-                              Text('pour $maxReps reps', style: TextStyle(color: Colors.grey[700])),
-                            ],
+                          Text(
+                            '${maxWeight.toStringAsFixed(maxWeight % 1 == 0 ? 0 : 1)} kg',
+                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
                           )
                         else
                           Text('Aucun record établi', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic)),
