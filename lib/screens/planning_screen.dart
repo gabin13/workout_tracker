@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/ux_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
@@ -40,7 +41,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                CustomPageRoute(page: const SettingsScreen()),
               );
             },
           ),

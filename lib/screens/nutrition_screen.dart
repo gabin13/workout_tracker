@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/ux_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/nutrition_provider.dart';
@@ -33,7 +34,7 @@ class _NutritionScreenState extends ConsumerState<NutritionScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                CustomPageRoute(page: const SettingsScreen()),
               );
             },
           ),

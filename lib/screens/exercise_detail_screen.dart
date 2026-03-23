@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../utils/ux_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -147,8 +148,8 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => PRHistoryScreen(
+                CustomPageRoute(
+                  page: PRHistoryScreen(
                     exerciseId: widget.exercise.id,
                     exerciseNom: widget.exercise.nom,
                   ),

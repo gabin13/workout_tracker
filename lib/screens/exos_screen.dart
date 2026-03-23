@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/ux_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/exercise_provider.dart';
 import '../providers/program_provider.dart';
@@ -45,7 +46,7 @@ class _ExosScreenState extends ConsumerState<ExosScreen>
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                CustomPageRoute(page: const SettingsScreen()),
               );
             },
           ),
@@ -213,8 +214,8 @@ class _ExercisesTabState extends ConsumerState<_ExercisesTab> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => ExerciseDetailScreen(exercise: ex),
+                            CustomPageRoute(
+                              page: ExerciseDetailScreen(exercise: ex),
                             ),
                           );
                         },
@@ -332,8 +333,8 @@ class _ProgrammesTab extends ConsumerWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ProgramDetailScreen(program: p),
+                      CustomPageRoute(
+                        page: ProgramDetailScreen(program: p),
                       ),
                     );
                   },

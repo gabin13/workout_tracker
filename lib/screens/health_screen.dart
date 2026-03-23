@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../utils/ux_utils.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/health_service.dart';
 import '../providers/database_provider.dart';
@@ -128,7 +130,7 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                CustomPageRoute(page: const SettingsScreen()),
               );
             },
           ),
@@ -154,7 +156,10 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: '',
                       icon: Icons.directions_walk,
                       color: Colors.blueAccent,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, CustomPageRoute(page: const StepsDetailsScreen()));
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -165,7 +170,10 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
                       unit: 'kcal',
                       icon: Icons.local_fire_department,
                       color: Colors.orangeAccent,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        Navigator.push(context, CustomPageRoute(page: const CaloriesDetailsScreen()));
+                      },
                     ),
                   ),
                 ],

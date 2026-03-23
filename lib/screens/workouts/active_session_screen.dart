@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/scheduled_workout.dart';
 import '../../models/workout_program.dart';
@@ -160,6 +161,7 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
             ..date = now
             ..poidsMax = w;
           await db.saveRecord(newPR);
+          HapticFeedback.heavyImpact(); // Vibration spéciale pour un Record Personnel
           print('---- ISAR: NOUVEAU RP ENREGISTRÉ: $w kg pour ${ae.exerciseDetails.nom} ----');
         }
       }
@@ -185,6 +187,7 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
       });
 
       if (mounted) {
+        HapticFeedback.lightImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${ae.exerciseDetails.nom} validé !')),
         );
@@ -244,7 +247,10 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width * 0.6,
                         child: OutlinedButton(
-                          onPressed: _isLoading ? null : _terminerSeance,
+                          onPressed: _isLoading ? null : () {
+                            HapticFeedback.vibrate();
+                            _terminerSeance();
+                          },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Theme.of(context).primaryColor,
                             side: BorderSide(color: Theme.of(context).primaryColor, width: 2),
@@ -403,6 +409,10 @@ class _ActiveSessionScreenState extends ConsumerState<ActiveSessionScreen> {
                 ),
                 icon: const Icon(Icons.add),
                 label: const Text('Ajouter une série'),
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  _addSet(ae);
+                },
               ),
             ),
             const SizedBox(height: 8),
