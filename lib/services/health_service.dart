@@ -36,10 +36,19 @@ class HealthService {
         startTime: midnight,
         endTime: now,
       );
+      
       double totalCalories = 0;
       for (var p in caloriesData) {
-        totalCalories += double.tryParse(p.value.toString()) ?? 0.0;
+        double val = 0.0;
+        if (p.value is NumericHealthValue) {
+          val = (p.value as NumericHealthValue).numericValue.toDouble();
+        } else {
+          val = double.tryParse(p.value.toString()) ?? 0.0;
+        }
+        totalCalories += val;
       }
+
+      print('--- FETCH TODAY CALORIES : $totalCalories ---');
 
       return {
         'steps': steps ?? 0,
@@ -72,13 +81,19 @@ class HealthService {
       Map<String, double> dailyCals = {};
 
       for (var p in data) {
+        double val = 0.0;
+        if (p.value is NumericHealthValue) {
+          val = (p.value as NumericHealthValue).numericValue.toDouble();
+        } else {
+          val = double.tryParse(p.value.toString()) ?? 0.0;
+        }
+
         final dateKey = "${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}";
-        final value = double.tryParse(p.value.toString()) ?? 0.0;
 
         if (p.type == HealthDataType.STEPS) {
-          dailySteps[dateKey] = (dailySteps[dateKey] ?? 0) + value;
+          dailySteps[dateKey] = (dailySteps[dateKey] ?? 0) + val;
         } else if (p.type == HealthDataType.ACTIVE_ENERGY_BURNED) {
-          dailyCals[dateKey] = (dailyCals[dateKey] ?? 0) + value;
+          dailyCals[dateKey] = (dailyCals[dateKey] ?? 0) + val;
         }
       }
 
@@ -117,7 +132,10 @@ class HealthService {
     try {
       final endOfWeek = startOfWeek.add(const Duration(days: 7));
       final now = DateTime.now();
+      // On s'assure d'avoir toute la journée (jusqu'à la fin de la veille de "startOfWeek + 7 jours")
       final endTime = endOfWeek.isAfter(now) ? now : endOfWeek;
+
+      print('--- FETCH API ($type) from $startOfWeek to $endTime ---');
 
       List<HealthDataPoint> data = await _health.getHealthDataFromTypes(
         types: [type],
@@ -128,10 +146,19 @@ class HealthService {
       Map<String, double> dailyData = {};
 
       for (var p in data) {
+        double val = 0.0;
+        if (p.value is NumericHealthValue) {
+          val = (p.value as NumericHealthValue).numericValue.toDouble();
+        } else {
+          val = double.tryParse(p.value.toString()) ?? 0.0;
+        }
+
         final dateKey = "${p.dateFrom.year}-${p.dateFrom.month.toString().padLeft(2, '0')}-${p.dateFrom.day.toString().padLeft(2, '0')}";
-        final value = double.tryParse(p.value.toString()) ?? 0.0;
-        dailyData[dateKey] = (dailyData[dateKey] ?? 0) + value;
+        dailyData[dateKey] = (dailyData[dateKey] ?? 0) + val;
       }
+      
+      print('--- RAW DATA GROUPED ($type) ---');
+      print(dailyData);
 
       List<Map<String, dynamic>> resultList = [];
       for (int i = 0; i < 7; i++) {
@@ -139,6 +166,9 @@ class HealthService {
         final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
         resultList.add({'date': date, 'value': dailyData[dateKey] ?? 0.0});
       }
+
+      print('--- FINAL RESULT LIST ($type) ---');
+      print(resultList);
 
       return resultList;
     } catch (e) {

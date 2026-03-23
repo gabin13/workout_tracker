@@ -148,7 +148,37 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. MESURES CORPORELLES (Local Database) ---
+              // --- 1. ACTIVITÉ (Apple Santé) ---
+              const Text('Activité du Jour', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildHealthCard(
+                      title: 'Pas',
+                      value: _healthData['steps'].toString(),
+                      unit: '',
+                      icon: Icons.directions_walk,
+                      color: Colors.blueAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildHealthCard(
+                      title: 'Calories',
+                      value: _healthData['calories'].toString(),
+                      unit: 'kcal',
+                      icon: Icons.local_fire_department,
+                      color: Colors.orangeAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // --- 2. MESURES CORPORELLES (Local Database) ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -185,40 +215,10 @@ class _HealthScreenState extends ConsumerState<HealthScreen> {
               ),
               const SizedBox(height: 24),
 
-              // --- 2. IMC ---
+              // --- 3. IMC ---
               const Text('Indice de Masse Corporelle', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               _buildBMICard(),
-              const SizedBox(height: 24),
-
-              // --- 3. ACTIVITÉ (Apple Santé) ---
-              const Text('Activité du Jour', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildHealthCard(
-                      title: 'Pas',
-                      value: _healthData['steps'].toString(),
-                      unit: '',
-                      icon: Icons.directions_walk,
-                      color: Colors.blueAccent,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StepsDetailsScreen())),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildHealthCard(
-                      title: 'Calories',
-                      value: _healthData['calories'].toString(),
-                      unit: 'kcal',
-                      icon: Icons.local_fire_department,
-                      color: Colors.orangeAccent,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CaloriesDetailsScreen())),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 24),
             ],
           ),

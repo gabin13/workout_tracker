@@ -191,6 +191,12 @@ class DatabaseService {
     });
   }
 
+  Future<void> deleteMeasurement(int id) async {
+    await isar.writeTxn(() async {
+      await isar.bodyMeasurements.delete(id);
+    });
+  }
+
   Future<List<BodyMeasurement>> getAllMeasurements() async {
     return await isar.bodyMeasurements.where().findAll();
   }

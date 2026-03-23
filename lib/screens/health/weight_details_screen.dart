@@ -23,11 +23,16 @@ class _WeightDetailsScreenState extends ConsumerState<WeightDetailsScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final history = await ref.read(databaseProvider).getWeightHistory(60);
+    final history = await ref.read(databaseProvider).getWeightHistory(365 * 10); // Charge un grand historique
     setState(() {
       _history = history;
       _isLoading = false;
     });
+  }
+
+  Future<void> _deleteMeasurement(int id) async {
+    await ref.read(databaseProvider).deleteMeasurement(id);
+    _loadData(); // Recharger après suppression
   }
 
   void _showUpdateDialog() {
@@ -199,9 +204,67 @@ class _WeightDetailsScreenState extends ConsumerState<WeightDetailsScreen> {
             ),
             const SizedBox(height: 16),
             _buildChart(),
+            const SizedBox(height: 32),
+
+            // History List
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Historique complet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 16),
+            _buildHistoryList(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHistoryList() {
+    if (_history.isEmpty) return const SizedBox.shrink();
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _history.length,
+      itemBuilder: (context, index) {
+        final entry = _history[index];
+        return Dismissible(
+          key: Key(entry.id.toString()),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            color: Colors.red,
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          onDismissed: (_) {
+            _deleteMeasurement(entry.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Entrée supprimée')),
+            );
+          },
+          child: Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 8),
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
+            child: ListTile(
+              leading: const Icon(Icons.monitor_weight_outlined, color: Colors.grey),
+              title: Text('${entry.date.day}/${entry.date.month}/${entry.date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('${entry.poids.toStringAsFixed(1)} kg', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green)),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    onPressed: () => _deleteMeasurement(entry.id),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -214,9 +277,13 @@ class _WeightDetailsScreenState extends ConsumerState<WeightDetailsScreen> {
     }
 
     // Préparer les données pour le line chart. 
+    // On ne prend que les 60 derniers jours pour le graphe
+    final threshold = DateTime.now().subtract(const Duration(days: 60));
+    final graphData = _history.where((m) => m.date.isAfter(threshold)).toList();
+    
     // Isar nous donne du plus récent au plus ancien (sortByDateDesc ou sort)
     // On doit inverser pour le graph (du plus ancien au plus récent)
-    final chartData = _history.reversed.toList();
+    final chartData = graphData.reversed.toList();
     
     List<FlSpot> spots = [];
     double minY = double.infinity;
