@@ -13,16 +13,28 @@ final notificationService = NotificationService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Remplacer l'écran gris par un écran d'erreur rouge explicite
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Container(
+        color: Colors.red,
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Text(
+            'FLUTTER ERROR:\n${details.exceptionAsString()}\n\n${details.stack.toString()}',
+            style: const TextStyle(color: Colors.white, fontSize: 14),
+          ),
+        ),
+      ),
+    );
+  };
+
   await databaseService.initialize();
   await notificationService.initialize();
   await initializeDateFormatting('fr_FR', null);
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -31,6 +43,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) {
+        return GestureDetector(
+          onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: child,
+        );
+      },
       debugShowCheckedModeBanner: false,
       title: 'Workout Tracker',
       themeMode: ThemeMode.light,
@@ -44,16 +64,19 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
           surface: const Color(0xFFF9F9F9),
         ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme).apply(
-          bodyColor: Colors.black87,
-          displayColor: Colors.black87,
-        ),
+        textTheme: GoogleFonts.interTextTheme(
+          ThemeData.light().textTheme,
+        ).apply(bodyColor: Colors.black87, displayColor: Colors.black87),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
           centerTitle: true,
-          titleTextStyle: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20),
+          titleTextStyle: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
           iconTheme: IconThemeData(color: Colors.black87),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -61,7 +84,9 @@ class MyApp extends StatelessWidget {
             backgroundColor: const Color(0xFF5E5CE6),
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             textStyle: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
@@ -69,18 +94,20 @@ class MyApp extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF5E5CE6),
             side: const BorderSide(color: Color(0xFF5E5CE6), width: 1.5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: const Color(0xFF5E5CE6),
-          ),
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF5E5CE6)),
         ),
         cardTheme: CardThemeData(
           color: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           color: Color(0xFF5E5CE6),

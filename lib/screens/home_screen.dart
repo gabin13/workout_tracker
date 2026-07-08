@@ -6,6 +6,7 @@ import '../providers/program_provider.dart';
 import '../providers/scheduled_workout_provider.dart';
 import '../providers/health_provider.dart';
 import '../providers/nutrition_provider.dart';
+import '../utils/formatters.dart';
 import 'settings_screen.dart';
 import 'workouts/active_session_screen.dart';
 import 'main_screen.dart'; // Pour le provider d'index
@@ -44,14 +45,14 @@ class HomeScreen extends ConsumerWidget {
               // --- SECTION HAUT : Séance du jour ---
               _buildTopSection(context, ref),
               const SizedBox(height: 16),
-              
+
               // --- SECTION MILIEU : Mini Dashboard Santé ---
               _buildMiddleSection(context, ref),
               const SizedBox(height: 16),
 
               // --- SECTION BAS : Mini Dashboard Nutrition ---
               _buildBottomSection(context, ref),
-              
+
               const SizedBox(height: 24),
             ],
           ),
@@ -70,7 +71,9 @@ class HomeScreen extends ConsumerWidget {
     return scheduledAsync.when(
       data: (sessions) {
         final today = DateTime.now();
-        final todaySession = sessions.where((s) => isSameDay(s.datePrevue, today)).firstOrNull;
+        final todaySession = sessions
+            .where((s) => isSameDay(s.datePrevue, today))
+            .firstOrNull;
 
         if (todaySession == null) {
           // Jour de repos
@@ -85,7 +88,9 @@ class HomeScreen extends ConsumerWidget {
 
         return programsAsync.when(
           data: (programs) {
-            final program = programs.where((p) => p.id == todaySession.workoutProgramId).firstOrNull;
+            final program = programs
+                .where((p) => p.id == todaySession.workoutProgramId)
+                .firstOrNull;
             if (program == null) {
               return _buildWorkOutCard(
                 context,
@@ -104,15 +109,18 @@ class HomeScreen extends ConsumerWidget {
                 },
                 child: _buildWorkOutCard(
                   context,
-                  title: 'Séance Validée ✅',
-                  subtitle: program.nom.toUpperCase(),
+                  title: program.nom.toUpperCase(),
+                  subtitle: 'Séance Validée ✅',
                   icon: Icons.emoji_events,
                   colors: [Colors.green.shade400, Colors.green.shade800],
                   bottomWidget: Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       '${program.exercises.length} exercices réalisés',
-                      style: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                 ),
@@ -124,47 +132,59 @@ class HomeScreen extends ConsumerWidget {
               onTap: () {}, // Handled by button
               child: _buildWorkOutCard(
                 context,
-                title: 'Séance du jour',
-              subtitle: program.nom.toUpperCase(),
-              icon: Icons.fitness_center,
-              colors: [Theme.of(context).primaryColor, Colors.indigo],
-              bottomWidget: Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                    Navigator.push(
-                      context,
-                      CustomPageRoute(
-                        page: ActiveSessionScreen(
-                          session: todaySession,
-                          program: program,
+                title: program.nom.toUpperCase(),
+                subtitle: '',
+                icon: Icons.fitness_center,
+                colors: [Theme.of(context).primaryColor, Colors.indigo],
+                bottomWidget: Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      Navigator.push(
+                        context,
+                        CustomPageRoute(
+                          page: ActiveSessionScreen(
+                            session: todaySession,
+                            program: program,
+                          ),
                         ),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.play_arrow,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                    label: Text(
+                      'Démarrer la séance',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  },
-                  icon: Icon(Icons.play_arrow, color: Theme.of(context).primaryColor),
-                  label: Text('Démarrer la séance', style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 0,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 0,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
-        loading: () => const ShimmerPlaceholderWorkout(),
-        error: (err, _) => Center(child: Text('Erreur: $err')),
-      );
-    },
-    loading: () => const ShimmerPlaceholderWorkout(),
-    error: (err, _) => Center(child: Text('Erreur: $err')),
-  );
-}
+            );
+          },
+          loading: () => const ShimmerPlaceholderWorkout(),
+          error: (err, _) => Center(child: Text('Erreur: $err')),
+        );
+      },
+      loading: () => const ShimmerPlaceholderWorkout(),
+      error: (err, _) => Center(child: Text('Erreur: $err')),
+    );
+  }
 
-  Widget _buildWorkOutCard(BuildContext context, {
+  Widget _buildWorkOutCard(
+    BuildContext context, {
     required String title,
     required String subtitle,
     required IconData icon,
@@ -173,6 +193,7 @@ class HomeScreen extends ConsumerWidget {
   }) {
     return Container(
       width: double.infinity,
+      height: 180,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -193,18 +214,27 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Colors.white.withAlpha(200)),
+            Icon(icon, size: 36, color: Colors.white.withAlpha(200)),
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
             if (subtitle.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 subtitle,
-                style: const TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -225,70 +255,94 @@ class HomeScreen extends ConsumerWidget {
       children: [
         // En-tête interactif Santé
         InkWell(
-          onTap: () => ref.read(navigationIndexProvider.notifier).state = 3, // Santé
+          onTap: () =>
+              ref.read(navigationIndexProvider.notifier).state = 3, // Santé
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
-                Text('Santé', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
+                Text(
+                  'Santé',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                  ),
+                ),
                 const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Theme.of(context).primaryColor,
+                  size: 18,
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 8),
         healthDataAsync.when(
-            data: (data) {
-              final steps = data['steps'] ?? 0;
-              final calories = data['calories'] ?? 0;
+          data: (data) {
+            final steps = data['steps'] ?? 0;
+            final calories = data['calories'] ?? 0;
 
-              return Row(
-                children: [
-            Expanded(
-              flex: 1,
-              child: AnimatedTapSelector(
-                onTap: () => Navigator.push(context, CustomPageRoute(page: const StepsDetailsScreen())),
-                child: _buildSquareCard(
-                  context,
-                  title: 'Pas',
-                  value: steps.toString(),
-                  icon: Icons.directions_walk,
-                  color: Colors.blueAccent,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 1,
-              child: AnimatedTapSelector(
-                onTap: () => Navigator.push(context, CustomPageRoute(page: const CaloriesDetailsScreen())),
-                child: _buildSquareCard(
-                  context,
-                  title: 'Brûlées',
-                  value: '$calories kcal',
-                  icon: Icons.local_fire_department,
-                  color: Colors.orangeAccent,
-                ),
-              ),
-            ),
-          ],
-            );
-            },
-            loading: () => const Row(
+            return Row(
               children: [
-                Expanded(child: ShimmerPlaceholderHealth()),
-                SizedBox(width: 16),
-                Expanded(child: ShimmerPlaceholderHealth()),
+                Expanded(
+                  flex: 1,
+                  child: AnimatedTapSelector(
+                    onTap: () => Navigator.push(
+                      context,
+                      CustomPageRoute(page: const StepsDetailsScreen()),
+                    ),
+                    child: _buildSquareCard(
+                      context,
+                      title: 'Pas',
+                      value: steps.toString(),
+                      icon: Icons.directions_walk,
+                      color: Colors.blueAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 1,
+                  child: AnimatedTapSelector(
+                    onTap: () => Navigator.push(
+                      context,
+                      CustomPageRoute(page: const CaloriesDetailsScreen()),
+                    ),
+                    child: _buildSquareCard(
+                      context,
+                      title: 'Brûlées',
+                      value: '$calories kcal',
+                      icon: Icons.local_fire_department,
+                      color: Colors.orangeAccent,
+                    ),
+                  ),
+                ),
               ],
-            ),
-            error: (err, _) => const Center(child: Icon(Icons.favorite_outline, color: Colors.grey)),
+            );
+          },
+          loading: () => const Row(
+            children: [
+              Expanded(child: ShimmerPlaceholderHealth()),
+              SizedBox(width: 16),
+              Expanded(child: ShimmerPlaceholderHealth()),
+            ],
           ),
+          error: (err, _) => const Center(
+            child: Icon(Icons.favorite_outline, color: Colors.grey),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSquareCard(BuildContext context, {
+  Widget _buildSquareCard(
+    BuildContext context, {
     required String title,
     required String value,
     required IconData icon,
@@ -315,7 +369,10 @@ class HomeScreen extends ConsumerWidget {
             child: Icon(Icons.chevron_right, color: color.withAlpha(150)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 24.0,
+              horizontal: 16.0,
+            ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -324,12 +381,20 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     title,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: const TextStyle(color: Colors.black87, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -351,66 +416,100 @@ class HomeScreen extends ConsumerWidget {
       children: [
         // En-tête interactif Nutrition
         InkWell(
-          onTap: () => ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
+          onTap: () =>
+              ref.read(navigationIndexProvider.notifier).state = 4, // Nutrition
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
-                Text('Nutrition', style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.w600, fontSize: 18)),
+                Text(
+                  'Nutrition',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                  ),
+                ),
                 const Spacer(),
-                Icon(Icons.arrow_forward_ios_rounded, color: Theme.of(context).primaryColor, size: 18),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Theme.of(context).primaryColor,
+                  size: 18,
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 8),
         goalAsync.when(
-            data: (goal) {
-              return logAsync.when(
-                data: (log) {
-            // Calculer les calories mangées depuis les meals
-            int totalEaten = 0;
-            for (var m in log.entries) {
-              totalEaten += m.calories;
-            }
+          data: (goal) {
+            return logAsync.when(
+              data: (log) {
+                // Calculer les calories mangées depuis les meals
+                double totalEaten = 0;
+                double totalProt = 0;
+                double totalGluc = 0;
+                double totalLip = 0;
+                for (var m in log.entries) {
+                  totalProt += m.proteines;
+                  totalGluc += m.glucides;
+                  totalLip += m.lipides;
+                }
+                totalEaten =
+                    (totalProt * 4.0) + (totalGluc * 4.0) + (totalLip * 9.0);
 
-            final progress = goal.calories > 0 ? (totalEaten / goal.calories) : 0.0;
-            final isOver = totalEaten > goal.calories;
+                final progress = goal.calories > 0
+                    ? (totalEaten / goal.calories)
+                    : 0.0;
+                final isOver = totalEaten > goal.calories;
 
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(20),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.restaurant, color: Colors.green, size: 28),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Calories',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 18, fontWeight: FontWeight.w600),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '$totalEaten / ${goal.calories} kcal',
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.restaurant,
+                              color: Colors.green,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Calories',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '${totalEaten.formatMacro()} / ${goal.calories.formatMacro()} kcal',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: isOver ? Colors.redAccent : Colors.black87,
+                                color: isOver
+                                    ? Colors.redAccent
+                                    : Colors.black87,
                               ),
                             ),
                           ],
@@ -427,17 +526,92 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildMacroMini(
+                              'Prot',
+                              totalProt,
+                              goal.proteines,
+                              Colors.blueAccent,
+                            ),
+                            _buildMacroMini(
+                              'Gluc',
+                              totalGluc,
+                              goal.glucides,
+                              Colors.orangeAccent,
+                            ),
+                            _buildMacroMini(
+                              'Lip',
+                              totalLip,
+                              goal.lipides,
+                              Colors.redAccent,
+                            ),
                           ],
                         ),
-                      ),
-            );
-          },
-              loading: () => const ShimmerPlaceholderWorkout(), // Reusing the large skeleton for now
-              error: (err, _) => const Center(child: Text('Log non trouvé')),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              loading: () =>
+                  const ShimmerPlaceholderWorkout(), // Reusing the large skeleton for now
+              error: (err, s) => Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.red.withAlpha(20),
+                child: Text(
+                  'Erreur Log Home:\n$err\n$s',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             );
           },
           loading: () => const ShimmerPlaceholderWorkout(),
-          error: (err, _) => const Center(child: Text('Objectif non défini')),
+          error: (err, s) => Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.red.withAlpha(20),
+            child: Text(
+              'Erreur Goal Home:\n$err\n$s',
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMacroMini(
+    String label,
+    double current,
+    double target,
+    Color color,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${current.formatMacro()}/${target.formatMacro()}g',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
         ),
       ],
     );

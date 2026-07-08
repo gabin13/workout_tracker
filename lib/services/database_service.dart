@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/exercise.dart';
@@ -18,23 +19,115 @@ class DatabaseService {
   Future<void> initialize() async {
     if (_isInitialized) return;
     final dir = await getApplicationDocumentsDirectory();
-    isar = await Isar.open(
-      [
-        ExerciseSchema,
-        WorkoutSchema,
-        WorkoutSetSchema,
-        ScheduledWorkoutSchema,
-        WorkoutProgramSchema,
-        ExerciseHistorySchema,
-        PersonalRecordSchema,
-        NutritionGoalSchema,
-        DailyNutritionLogSchema,
-        MealEntrySchema,
-        BodyMeasurementSchema, // Added BodyMeasurementSchema
-      ],
-      directory: dir.path,
-    );
+    try {
+      isar = await Isar.open(
+        [
+          ExerciseSchema,
+          WorkoutSchema,
+          WorkoutSetSchema,
+          ScheduledWorkoutSchema,
+          WorkoutProgramSchema,
+          ExerciseHistorySchema,
+          PersonalRecordSchema,
+          NutritionGoalSchema,
+          DailyNutritionLogSchema,
+          MealEntrySchema,
+          BodyMeasurementSchema,
+        ],
+        directory: dir.path,
+      );
+    } catch (e) {
+      print('Erreur d\'ouverture Isar, suppression de la base: $e');
+      // En cas d'incompatibilité de schéma (ex: int -> double), on supprime la base
+      final isarFile = File('${dir.path}/default.isar');
+      final lockFile = File('${dir.path}/default.isar.lock');
+      if (await isarFile.exists()) await isarFile.delete();
+      if (await lockFile.exists()) await lockFile.delete();
+      
+      // On retente l'ouverture
+      isar = await Isar.open(
+        [
+          ExerciseSchema,
+          WorkoutSchema,
+          WorkoutSetSchema,
+          ScheduledWorkoutSchema,
+          WorkoutProgramSchema,
+          ExerciseHistorySchema,
+          PersonalRecordSchema,
+          NutritionGoalSchema,
+          DailyNutritionLogSchema,
+          MealEntrySchema,
+          BodyMeasurementSchema,
+        ],
+        directory: dir.path,
+      );
+    }
     _isInitialized = true;
+    await _autoMapImages();
+  }
+
+  Future<void> _autoMapImages() async {
+    final exercises = await isar.exercises.where().findAll();
+    final Map<String, String> mappings = {
+      'développé couché': 'bench-press.gif',
+      'bench press': 'bench-press.gif',
+      'incliné': 'developpe-incline.gif',
+      'mollet': 'calf-raise.gif',
+      'calf': 'calf-raise.gif',
+      'tirage serré': 'close-grip-row.gif',
+      'close grip': 'close-grip-row.gif',
+      'latérale': 'lateral-raise.gif',
+      'latérales': 'lateral-raise.gif',
+      'lateral raise': 'lateral-raise.gif',
+      'hack': 'hack-squat.gif',
+      'marteau': 'hammer-curl.gif',
+      'hammer': 'hammer-curl.gif',
+      'adducteur': 'hip-adductor.gif',
+      'thrust': 'hip-thrust.gif',
+      'poitrine': 'lat-pulldown.gif',
+      'vertical': 'lat-pulldown.gif',
+      'leg curl': 'leg-curl.gif',
+      'leg extension': 'leg-extension.gif',
+      'presse': 'leg-press.gif',
+      'leg press': 'leg-press.gif',
+      'dips': 'dips-machine.gif',
+      'pec fly': 'pec-fly.gif',
+      'écarté': 'pec-fly.gif',
+      'preacher': 'preacher-curl.gif',
+      'pupitre': 'preacher-curl.gif',
+      'crunch': 'crunch-machine.gif',
+      'décliné': 'decline-crunch.gif',
+      'militaire': 'shoulder-press.gif',
+      'shoulder': 'shoulder-press.gif',
+      'triceps': 'triceps-pushdown.gif',
+      'horizontal': 'upper-back-row.gif',
+      'upper back': 'upper-back-row.gif',
+      'dos': 'upper-back-row.gif',
+      'extension': 'back-extension.gif',
+      'lombaire': 'back-extension.gif',
+    };
+
+    await isar.writeTxn(() async {
+      for (final ex in exercises) {
+        // Remap if empty, or if it points to an old webp/jpg image that was replaced
+        if (ex.imagePath == null || ex.imagePath!.isEmpty || !ex.imagePath!.endsWith('.gif')) {
+          final nom = ex.nom.toLowerCase();
+          String? matchName;
+          
+          for (final key in mappings.keys) {
+            if (nom.contains(key)) {
+              matchName = mappings[key];
+              break;
+            }
+          }
+          
+          if (matchName != null) {
+            ex.imagePath = 'assets/exercises/$matchName';
+            await isar.exercises.put(ex);
+          }
+        }
+      }
+    });
   }
 
   // ─── Exercises ─────────────────────────────────────────────────────────────
@@ -62,8 +155,18 @@ class DatabaseService {
       final programs = await isar.workoutPrograms.where().findAll();
       for (var p in programs) {
         final initialLength = p.exercises.length;
-        p.exercises.removeWhere((e) => e.exerciseId == id);
-        if (p.exercises.length != initialLength) {
+        
+        // On crée une NOUVELLE liste pour éviter UnsupportedError (si la liste Isar est en lecture seule)
+        // et on utilise un map complet pour contourner le bug Isar de dirty-tracking
+        final newExercises = p.exercises
+            .where((e) => e.exerciseId != id)
+            .map((e) => ProgramExercise.fromMap(e.toMap()))
+            .toList();
+            
+        if (newExercises.length != initialLength) {
+          p.exercises = newExercises;
+          // Delete + put atomique pour forcer la sauvegarde
+          await isar.workoutPrograms.delete(p.id);
           await isar.workoutPrograms.put(p);
         }
       }
@@ -85,6 +188,16 @@ class DatabaseService {
 
   Future<void> saveProgram(WorkoutProgram program) async {
     await isar.writeTxn(() async {
+      await isar.workoutPrograms.put(program);
+    });
+  }
+
+  /// Force la mise à jour d'un programme en supprimant puis réinsérant l'enregistrement
+  /// dans une seule transaction. Contourne le bug Isar v3 où les listes @embedded
+  /// modifiées in-place ne sont pas détectées comme "dirty" par le moteur.
+  Future<void> forceUpdateProgram(WorkoutProgram program) async {
+    await isar.writeTxn(() async {
+      await isar.workoutPrograms.delete(program.id);
       await isar.workoutPrograms.put(program);
     });
   }
@@ -145,6 +258,42 @@ class DatabaseService {
     });
   }
 
+  /// Récupère le log d'un exercice enregistré AUJOURD'HUI (null si aucun)
+  Future<ExerciseHistory?> getHistoryForToday(int exerciseId) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final all = await isar.exerciseHistorys
+        .filter()
+        .exerciseIdEqualTo(exerciseId)
+        .dateBetween(startOfDay, endOfDay)
+        .findAll();
+
+    return all.isNotEmpty ? all.first : null;
+  }
+
+  /// Récupère le dernier log d'un exercice AVANT aujourd'hui (null si aucun)
+  Future<ExerciseHistory?> getLastHistoryBefore(int exerciseId, DateTime today) async {
+    final startOfToday = DateTime(today.year, today.month, today.day);
+
+    final all = await isar.exerciseHistorys
+        .filter()
+        .exerciseIdEqualTo(exerciseId)
+        .dateLessThan(startOfToday)
+        .sortByDateDesc()
+        .findAll();
+
+    return all.isNotEmpty ? all.first : null;
+  }
+
+  /// Met à jour un log existant (pour éviter les doublons si on revalide)
+  Future<void> updateHistory(ExerciseHistory history) async {
+    await isar.writeTxn(() async {
+      await isar.exerciseHistorys.put(history);
+    });
+  }
+
   // ─── PersonalRecord ────────────────────────────────────────────────────────
 
   Future<List<PersonalRecord>> getRecordsForExercise(int exerciseId) async {
@@ -153,6 +302,10 @@ class DatabaseService {
         .exerciseIdEqualTo(exerciseId)
         .sortByDateDesc()
         .findAll();
+  }
+
+  Future<List<PersonalRecord>> getAllPersonalRecords() async {
+    return await isar.personalRecords.where().findAll();
   }
 
   Future<void> saveRecord(PersonalRecord record) async {

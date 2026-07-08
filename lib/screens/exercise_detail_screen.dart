@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:gif_view/gif_view.dart';
 import '../utils/ux_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -20,32 +22,12 @@ class ExerciseDetailScreen extends ConsumerStatefulWidget {
   const ExerciseDetailScreen({super.key, required this.exercise});
 
   @override
-  ConsumerState<ExerciseDetailScreen> createState() => _ExerciseDetailScreenState();
+  ConsumerState<ExerciseDetailScreen> createState() =>
+      _ExerciseDetailScreenState();
 }
 
 class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
-  late TextEditingController _notesController;
-
-  @override
-  void initState() {
-    super.initState();
-    _notesController = TextEditingController(text: widget.exercise.notesReglagesMachine);
-  }
-
-  Future<void> _saveNotes() async {
-    final db = ref.read(databaseProvider);
-    
-    // 1. Sauvegarder les notes si elles ont changé
-    if (_notesController.text != widget.exercise.notesReglagesMachine) {
-      widget.exercise.notesReglagesMachine = _notesController.text;
-      await db.saveExercise(widget.exercise);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Notes enregistrées !')),
-        );
-      }
-    }
-  }
+  String _selectedPeriod = '2M';
 
   double _calculateMaxWeight(String seriesData) {
     double maxW = 0.0;
@@ -67,7 +49,7 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
       final xIndex = p.indexOf('x');
       final kgIndex = p.indexOf('kg');
       if (xIndex != -1) {
-        final weightStr = (kgIndex != -1 && kgIndex > xIndex) 
+        final weightStr = (kgIndex != -1 && kgIndex > xIndex)
             ? p.substring(xIndex + 1, kgIndex)
             : p.substring(xIndex + 1);
         final w = double.tryParse(weightStr.trim()) ?? 0.0;
@@ -77,24 +59,65 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     return maxW;
   }
 
-  String _formatSeriesDisplay(String seriesData) {
+  List<Widget> _buildSeriesPills(String seriesData) {
+    List<Widget> pills = [];
+
     try {
       if (seriesData.startsWith('[')) {
         final List<dynamic> decoded = jsonDecode(seriesData);
-        List<String> formatted = [];
         for (int i = 0; i < decoded.length; i++) {
-          formatted.add('Série ${i+1}: ${decoded[i]['reps']}x${decoded[i]['poids']}kg');
+          final reps = decoded[i]['reps'];
+          final poids = decoded[i]['poids'];
+          final poidsVal = double.tryParse(poids.toString()) ?? 0;
+          final poidsStr = poidsVal % 1 == 0
+              ? poidsVal.toInt().toString()
+              : poidsVal.toStringAsFixed(1);
+          pills.add(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '$reps × ${poidsStr}kg',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          );
         }
-        return formatted.join(' | ');
+        return pills;
       }
     } catch (_) {}
 
+    // Fallback pour le format legacy
     final parts = seriesData.split(',');
-    List<String> formatted = [];
-    for (int i = 0; i < parts.length; i++) {
-      formatted.add('Série ${i+1}: ${parts[i].trim()}');
+    for (var p in parts) {
+      p = p.trim();
+      if (p.isEmpty) continue;
+      pills.add(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            p,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      );
     }
-    return formatted.join(' | ');
+    return pills;
   }
 
   @override
@@ -118,87 +141,207 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
       body: Column(
         children: [
           _buildPRBanner(context, ref, prsAsync),
-          Expanded(
-            child: _buildViewMode(context),
-          ),
+          Expanded(child: _buildViewMode(context)),
         ],
       ),
     );
   }
 
-  Widget _buildPRBanner(BuildContext context, WidgetRef ref, AsyncValue<List<dynamic>> prsAsync) {
+  Widget _buildPRBanner(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<dynamic>> prsAsync,
+  ) {
     return prsAsync.when(
       data: (prs) {
         double maxWeight = 0;
-        
+        DateTime? prDate;
+
         for (var pr in prs) {
           if (pr.poidsMax > maxWeight) {
             maxWeight = pr.poidsMax;
+            prDate = pr.date;
           }
         }
 
         final bool hasPR = maxWeight > 0;
 
-        return Card(
-          margin: const EdgeInsets.all(16),
-          color: Theme.of(context).colorScheme.primaryContainer,
-          elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                CustomPageRoute(
-                  page: PRHistoryScreen(
-                    exerciseId: widget.exercise.id,
-                    exerciseNom: widget.exercise.nom,
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // LEFT: PR Card
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      CustomPageRoute(
+                        page: PRHistoryScreen(
+                          exerciseId: widget.exercise.id,
+                          exerciseNom: widget.exercise.nom,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    height: 160,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.amber.withAlpha(20),
+                          Colors.orange.withAlpha(12),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.emoji_events,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Record Personnel',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          if (hasPR) ...[
+                            Text(
+                              '${maxWeight.toStringAsFixed(maxWeight % 1 == 0 ? 0 : 1)} kg',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE6A817),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (prDate != null)
+                              Text(
+                                '${prDate.day.toString().padLeft(2, '0')}/${prDate.month.toString().padLeft(2, '0')}/${prDate.year}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                          ] else
+                            Text(
+                              'Aucun record',
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontStyle: FontStyle.italic,
+                                fontSize: 14,
+                              ),
+                            ),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              Text(
+                                'Voir l\'historique',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[400],
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 14,
+                                color: Colors.grey[400],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              );
-            },
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withAlpha(50),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.emoji_events, color: Colors.amber, size: 32),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Record Personnel Actuel',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                        const SizedBox(height: 4),
-                        if (hasPR)
-                          Text(
-                            '${maxWeight.toStringAsFixed(maxWeight % 1 == 0 ? 0 : 1)} kg',
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
-                          )
-                        else
-                          Text('Aucun record établi', style: TextStyle(color: Colors.grey[600], fontStyle: FontStyle.italic)),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
-                ],
               ),
-            ),
+              const SizedBox(width: 12),
+              // RIGHT: GIF Demo
+              Expanded(
+                child: Container(
+                  height: 160,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: _buildDetailGif(),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
-      loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+      loading: () => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: CircularProgressIndicator(),
+        ),
+      ),
       error: (e, s) => const SizedBox(),
     );
+  }
+
+  Widget _buildDetailGif() {
+    final path = widget.exercise.imagePath;
+    if (path == null || path.isEmpty) {
+      return Center(
+        child: Icon(Icons.fitness_center, size: 48, color: Colors.grey[300]),
+      );
+    }
+    final isGif = path.toLowerCase().endsWith('.gif');
+    if (path.startsWith('/')) {
+      if (isGif) {
+        return GifView.memory(
+          File(path).readAsBytesSync(),
+          autoPlay: true,
+          loop: true,
+          fit: BoxFit.contain,
+        );
+      }
+      return Image.file(File(path), fit: BoxFit.contain);
+    }
+    if (path.startsWith('http')) {
+      if (isGif) {
+        return GifView.network(
+          path,
+          autoPlay: true,
+          loop: true,
+          fit: BoxFit.contain,
+        );
+      }
+      return Image.network(path, fit: BoxFit.contain);
+    }
+    if (isGif) {
+      return GifView.asset(
+        path,
+        autoPlay: true,
+        loop: true,
+        fit: BoxFit.contain,
+      );
+    }
+    return Image.asset(path, fit: BoxFit.contain);
   }
 
   Widget _buildViewMode(BuildContext context) {
@@ -206,46 +349,42 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
 
     return historyAsync.when(
       data: (history) {
-        // history is sorted desc. Let's make an asc list for charting
         final ascHistory = history.reversed.toList();
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildProgressChart(ascHistory),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
-              const Text('Réglages / Notes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _notesController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Ex: Hauteur siège 3, position pieds…',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              const Text(
+                'Dernières performances',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton.icon(
-                  onPressed: _saveNotes,
-                  icon: const Icon(Icons.save, size: 18),
-                  label: const Text('Enregistrer les notes'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              if (history.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Aucun historique pour le moment.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ),
-              ),
-              const Divider(height: 32),
-              
-              const Text('Dernières performances', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              const SizedBox(height: 8),
-              if (history.isEmpty) 
-                const Text('Aucun historique pour le moment.', style: TextStyle(fontStyle: FontStyle.italic)),
               if (history.isNotEmpty)
                 ListView.builder(
                   shrinkWrap: true,
@@ -253,27 +392,141 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
                   itemCount: history.length > 3 ? 3 : history.length,
                   itemBuilder: (context, index) {
                     final item = history[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
-                          child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+                    final maxW = _calculateMaxWeight(item.series);
+                    final maxWStr = maxW % 1 == 0
+                        ? maxW.toInt().toString()
+                        : maxW.toStringAsFixed(1);
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(10),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            // Left accent bar
+                            Container(
+                              width: 4,
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withAlpha(180),
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(14),
+                                  bottomLeft: Radius.circular(14),
+                                ),
+                              ),
+                            ),
+                            // Content
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  12,
+                                  14,
+                                  12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Date + pills
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.calendar_today_outlined,
+                                                size: 13,
+                                                color: Colors.grey[400],
+                                              ),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                '${item.date.day.toString().padLeft(2, '0')}/${item.date.month.toString().padLeft(2, '0')}/${item.date.year}',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 12,
+                                                  color: Colors.grey[500],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 5,
+                                            runSpacing: 5,
+                                            children: _buildSeriesPills(
+                                              item.series,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Max weight badge
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withAlpha(18),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            '$maxWStr',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 18,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                          ),
+                                          Text(
+                                            'kg',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.grey[500],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        title: Text('${item.date.day}/${item.date.month}/${item.date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(_formatSeriesDisplay(item.series)),
                       ),
                     );
                   },
                 ),
-              if (history.length > 3)
+              if (history.length > 3) ...[
+                const SizedBox(height: 16),
                 Center(
                   child: TextButton.icon(
                     onPressed: () => _showFullHistory(context, history),
-                    icon: const Icon(Icons.list),
+                    icon: const Icon(Icons.list, size: 18),
                     label: const Text('Voir tout l\'historique'),
                   ),
                 ),
+              ],
             ],
           ),
         );
@@ -286,35 +539,95 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
   Widget _buildProgressChart(List<ExerciseHistory> ascHistory) {
     if (ascHistory.length < 2) {
       return Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey.withAlpha(20),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withAlpha(40)),
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Icon(Icons.show_chart, color: Colors.grey, size: 40),
-            SizedBox(height: 8),
+            Icon(Icons.show_chart, color: Colors.grey[400], size: 36),
+            const SizedBox(height: 8),
             Text(
-              'Continuez à vous entraîner pour débloquer le graphique de progression.',
+              'Continuez à vous entraîner pour débloquer le graphique.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontStyle: FontStyle.italic,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
       );
     }
 
+    // Filter history by selected period
+    final now = DateTime.now();
+    final List<ExerciseHistory> filtered;
+    if (_selectedPeriod == 'Tout') {
+      filtered = ascHistory;
+    } else {
+      final Duration duration;
+      switch (_selectedPeriod) {
+        case '1S':
+          duration = const Duration(days: 7);
+          break;
+        case '1M':
+          duration = const Duration(days: 30);
+          break;
+        case '2M':
+          duration = const Duration(days: 60);
+          break;
+        case '3M':
+          duration = const Duration(days: 90);
+          break;
+        case '6M':
+          duration = const Duration(days: 180);
+          break;
+        default:
+          duration = const Duration(days: 60);
+      }
+      final cutoff = now.subtract(duration);
+      filtered = ascHistory.where((h) => h.date.isAfter(cutoff)).toList();
+    }
+
+    if (filtered.length < 2) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildChartHeader(),
+          const SizedBox(height: 12),
+          _buildPeriodSelector(),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Text(
+              'Pas assez de données sur cette période.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontStyle: FontStyle.italic,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     final List<FlSpot> spots = [];
-    double minX = 0;
-    double maxX = (ascHistory.length - 1).toDouble();
     double minY = double.infinity;
     double maxY = 0;
 
-    for (int i = 0; i < ascHistory.length; i++) {
-      final maxW = _calculateMaxWeight(ascHistory[i].series);
+    for (int i = 0; i < filtered.length; i++) {
+      final maxW = _calculateMaxWeight(filtered[i].series);
       spots.add(FlSpot(i.toDouble(), maxW));
       if (maxW < minY) minY = maxW;
       if (maxW > maxY) maxY = maxW;
@@ -327,56 +640,207 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Progression de la charge', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        _buildChartHeader(),
+        const SizedBox(height: 12),
+        _buildPeriodSelector(),
         const SizedBox(height: 16),
-        Container(
-          height: 200,
-          padding: const EdgeInsets.fromLTRB(16, 24, 24, 16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-          ),
-          child: LineChart(
-            LineChartData(
-              gridData: const FlGridData(show: true, drawVerticalLine: false),
-              titlesData: FlTitlesData(
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 40,
-                    getTitlesWidget: (value, meta) {
-                      return Text('${value.toInt()}kg', style: const TextStyle(fontSize: 10, color: Colors.grey));
+        SizedBox(
+          height: 220,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: LineChart(
+              LineChartData(
+                lineTouchData: LineTouchData(
+                  enabled: true,
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipColor: (_) => Colors.white,
+                    tooltipBorder: BorderSide(
+                      color: Colors.grey[200]!,
+                      width: 1,
+                    ),
+                    tooltipBorderRadius: BorderRadius.circular(12),
+                    tooltipPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final idx = spot.spotIndex;
+                        final d = filtered[idx].date;
+                        final dateStr =
+                            '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+                        final weightVal = spot.y;
+                        final weightStr = weightVal % 1 == 0
+                            ? weightVal.toInt().toString()
+                            : weightVal.toStringAsFixed(1);
+                        return LineTooltipItem(
+                          '$weightStr kg\n',
+                          TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: dateStr,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 11,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        );
+                      }).toList();
                     },
                   ),
+                  handleBuiltInTouches: true,
                 ),
-              ),
-              borderData: FlBorderData(show: false),
-              minX: minX,
-              maxX: maxX,
-              minY: minY,
-              maxY: maxY,
-              lineBarsData: [
-                LineChartBarData(
-                  spots: spots,
-                  isCurved: true,
-                  color: Theme.of(context).colorScheme.primary,
-                  barWidth: 3,
-                  isStrokeCapRound: true,
-                  dotData: const FlDotData(show: true),
-                  belowBarData: BarAreaData(
-                    show: true,
-                    color: Theme.of(context).colorScheme.primary.withAlpha(30),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: ((maxY - minY) / 4).clamp(
+                    1,
+                    double.infinity,
+                  ),
+                  getDrawingHorizontalLine: (value) =>
+                      FlLine(color: Colors.grey.withAlpha(30), strokeWidth: 1),
+                ),
+                titlesData: FlTitlesData(
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final idx = value.toInt();
+                        if (idx < 0 || idx >= filtered.length)
+                          return const SizedBox.shrink();
+                        // Only show first and last date
+                        if (idx != 0 && idx != filtered.length - 1) {
+                          return const SizedBox.shrink();
+                        }
+                        final d = filtered[idx].date;
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          '${value.toInt()}kg',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[400],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ],
+                borderData: FlBorderData(show: false),
+                minX: 0,
+                maxX: (filtered.length - 1).toDouble(),
+                minY: minY,
+                maxY: maxY,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    preventCurveOverShooting: true,
+                    color: Theme.of(context).colorScheme.primary,
+                    barWidth: 2.5,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, bar, index) =>
+                          FlDotCirclePainter(
+                            radius: 3,
+                            color: Colors.white,
+                            strokeWidth: 2,
+                            strokeColor: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withAlpha(50),
+                          Theme.of(context).colorScheme.primary.withAlpha(5),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildChartHeader() {
+    return const Text(
+      'Progression de la charge',
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector() {
+    final periods = ['1M', '2M', '3M', '6M', 'Tout'];
+    return Row(
+      children: periods.map((p) {
+        final isSelected = p == _selectedPeriod;
+        return Padding(
+          padding: const EdgeInsets.only(right: 6),
+          child: GestureDetector(
+            onTap: () => setState(() => _selectedPeriod = p),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey[100],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                p,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.white : Colors.grey[600],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -392,18 +856,28 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nomCtrl, decoration: const InputDecoration(labelText: 'Nom')),
+              TextField(
+                controller: nomCtrl,
+                decoration: const InputDecoration(labelText: 'Nom'),
+              ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Muscle principal'),
+                decoration: const InputDecoration(
+                  labelText: 'Muscle principal',
+                ),
                 initialValue: selectedMuscle,
-                items: muscleCategories.map((m) => DropdownMenuItem(value: m, child: Text(m))).toList(),
+                items: muscleCategories
+                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                    .toList(),
                 onChanged: (val) => setDialogState(() => selectedMuscle = val),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 if (nomCtrl.text.isNotEmpty && selectedMuscle != null) {
@@ -411,7 +885,9 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
                     widget.exercise.nom = nomCtrl.text;
                     widget.exercise.musclePrincipal = selectedMuscle!;
                   });
-                  await ref.read(databaseProvider).saveExercise(widget.exercise);
+                  await ref
+                      .read(databaseProvider)
+                      .saveExercise(widget.exercise);
                   ref.invalidate(exercisesProvider);
                   // Rafraîchir aussi les stats et programmes car le nom/muscle change
                   ref.invalidate(workoutProgramsProvider);
@@ -426,12 +902,17 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
     );
   }
 
-  void _showFullHistory(BuildContext context, List<ExerciseHistory> fullHistory) {
+  void _showFullHistory(
+    BuildContext context,
+    List<ExerciseHistory> fullHistory,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
         return Column(
           children: [
@@ -439,7 +920,14 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
-                  const Text('Historique Complet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Historique Complet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close_rounded),
@@ -450,19 +938,131 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
             ),
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: fullHistory.length,
                 itemBuilder: (context, index) {
                   final item = fullHistory[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
-                        child: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+                  final maxW = _calculateMaxWeight(item.series);
+                  final maxWStr = maxW % 1 == 0
+                      ? maxW.toInt().toString()
+                      : maxW.toStringAsFixed(1);
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(10),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          // Left accent bar
+                          Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withAlpha(180),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(14),
+                                bottomLeft: Radius.circular(14),
+                              ),
+                            ),
+                          ),
+                          // Content
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                12,
+                                14,
+                                12,
+                              ),
+                              child: Row(
+                                children: [
+                                  // Date + pills
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today_outlined,
+                                              size: 13,
+                                              color: Colors.grey[400],
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              '${item.date.day.toString().padLeft(2, '0')}/${item.date.month.toString().padLeft(2, '0')}/${item.date.year}',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 5,
+                                          runSpacing: 5,
+                                          children: _buildSeriesPills(
+                                            item.series,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Max weight badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary.withAlpha(18),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '$maxWStr',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 18,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'kg',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.grey[500],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      title: Text('${item.date.day}/${item.date.month}/${item.date.year}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text(_formatSeriesDisplay(item.series)),
                     ),
                   );
                 },
@@ -480,24 +1080,33 @@ class _ExerciseDetailScreenState extends ConsumerState<ExerciseDetailScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer l\'exercice ?'),
         content: const Text(
-            'Cela supprimera DEFINITIVEMENT tout l\'historique et les records liés, et le retirera de vos programmes.'),
+          'Cela supprimera DEFINITIVEMENT tout l\'historique et les records liés, et le retirera de vos programmes.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref.read(databaseProvider).deleteExercise(widget.exercise.id);
-              
+              await ref
+                  .read(databaseProvider)
+                  .deleteExercise(widget.exercise.id);
+
               // On rafraîchit tout car l'exercice est partout
               ref.invalidate(exercisesProvider);
               ref.invalidate(workoutProgramsProvider);
               ref.invalidate(scheduledWorkoutsProvider);
               ref.invalidate(personalRecordsProvider(widget.exercise.id));
-              
+
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

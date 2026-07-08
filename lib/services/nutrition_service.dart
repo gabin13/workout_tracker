@@ -30,24 +30,47 @@ class NutritionService {
   // ─── Daily Log ─────────────────────────────────────────────────────────────
 
   Future<DailyNutritionLog> getLogForDate(DateTime date) async {
-    final normalizedDate = DateTime(date.year, date.month, date.day);
-    
-    var log = await _db.isar.dailyNutritionLogs
-        .filter()
-        .dateEqualTo(normalizedDate)
-        .findFirst();
+    final targetMidnight = DateTime(date.year, date.month, date.day);
+    final windowStart = targetMidnight.subtract(const Duration(hours: 13));
+    final windowEnd = targetMidnight.add(const Duration(hours: 13));
 
-    if (log == null) {
-      log = DailyNutritionLog()..date = normalizedDate;
-      await _db.isar.writeTxn(() async {
-        await _db.isar.dailyNutritionLogs.put(log!);
+    // Récupérer TOUS les logs dans la fenêtre des fuseaux horaires (25h)
+    final logsInWindow = await _db.isar.dailyNutritionLogs
+        .filter()
+        .dateBetween(windowStart, windowEnd)
+        .findAll();
+
+    DailyNutritionLog? bestLog;
+
+    if (logsInWindow.isNotEmpty) {
+      // Charger les repas pour voir s'il s'agit du "vrai" log contenant les données
+      for (var l in logsInWindow) {
+        await l.entries.load();
+      }
+      
+      // Trier pour prioriser :
+      // 1. Les logs qui contiennent des repas (pour bypasser les doublons vides)
+      // 2. Le log qui correspond exactement à la date (si tous sont vides)
+      logsInWindow.sort((a, b) {
+        if (a.entries.length != b.entries.length) {
+          return b.entries.length.compareTo(a.entries.length); // Plus de repas en premier
+        }
+        final aExact = a.date == targetMidnight ? 1 : 0;
+        final bExact = b.date == targetMidnight ? 1 : 0;
+        return bExact.compareTo(aExact); 
       });
-    } else {
-      // Charger les liens Isar
-      await log.entries.load();
+
+      bestLog = logsInWindow.first;
     }
 
-    return log;
+    if (bestLog == null) {
+      bestLog = DailyNutritionLog()..date = targetMidnight;
+      await _db.isar.writeTxn(() async {
+        await _db.isar.dailyNutritionLogs.put(bestLog!);
+      });
+    }
+
+    return bestLog;
   }
 
   // ─── Meal Entries ──────────────────────────────────────────────────────────
@@ -80,17 +103,19 @@ class NutritionService {
   }
 
   // Calcul des totaux pour une liste de MealEntries
-  Map<String, int> calculateTotals(List<MealEntry> entries) {
-    int kcal = 0;
-    int prot = 0;
-    int gluc = 0;
-    int lip = 0;
+  Map<String, double> calculateTotals(List<MealEntry> entries) {
+    double kcal = 0;
+    double prot = 0;
+    double gluc = 0;
+    double lip = 0;
+    double fib = 0;
 
     for (var e in entries) {
       kcal += e.calories;
       prot += e.proteines;
       gluc += e.glucides;
       lip += e.lipides;
+      fib += e.fibres ?? 0.0;
     }
 
     return {
@@ -98,6 +123,7 @@ class NutritionService {
       'proteines': prot,
       'glucides': gluc,
       'lipides': lip,
+      'fibres': fib,
     };
   }
 }

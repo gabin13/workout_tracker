@@ -10,9 +10,5 @@ const List<String> muscleCategories = [
   "Fessiers",
   "Abdominaux",
   "Lombaires",
-  "Trapèzes",
-  "Avant-bras",
-  "Cardio",
   "Adducteurs",
-  "Corps entier",
 ];

@@ -13,10 +13,11 @@ enum MealType {
 class NutritionGoal {
   Id id = Isar.autoIncrement;
 
-  int calories = 2500;
-  int proteines = 150;
-  int glucides = 300;
-  int lipides = 80;
+  double calories = 2500.0;
+  double proteines = 150.0;
+  double glucides = 300.0;
+  double lipides = 80.0;
+  double? fibres = 30.0; // default value for goals
 }
 
 @Collection()
@@ -41,10 +42,11 @@ class MealEntry {
   @enumerated
   late MealType mealType;
 
-  int calories = 0;
-  int proteines = 0;
-  int glucides = 0;
-  int lipides = 0;
+  double calories = 0.0;
+  double proteines = 0.0;
+  double glucides = 0.0;
+  double lipides = 0.0;
+  double? fibres = 0.0;
 
   String? notes;
 }

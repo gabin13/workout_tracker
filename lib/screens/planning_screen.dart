@@ -57,6 +57,7 @@ class _PlanningScreenState extends ConsumerState<PlanningScreen> {
                   firstDay: DateTime.now().subtract(const Duration(days: 365)),
                   lastDay: DateTime.now().add(const Duration(days: 365)),
                   focusedDay: _focusedDay,
+                  startingDayOfWeek: StartingDayOfWeek.monday,
                   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                   headerStyle: const HeaderStyle(
                     titleCentered: true,

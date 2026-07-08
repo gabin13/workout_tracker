@@ -6,3 +6,8 @@ final personalRecordsProvider = FutureProvider.family<List<PersonalRecord>, int>
   final db = ref.watch(databaseProvider);
   return db.getRecordsForExercise(exerciseId);
 });
+
+final allPersonalRecordsProvider = FutureProvider<List<PersonalRecord>>((ref) async {
+  final db = ref.watch(databaseProvider);
+  return db.getAllPersonalRecords();
+});

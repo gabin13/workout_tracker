@@ -20,22 +20,27 @@ const NutritionGoalSchema = CollectionSchema(
     r'calories': PropertySchema(
       id: 0,
       name: r'calories',
-      type: IsarType.long,
+      type: IsarType.double,
+    ),
+    r'fibres': PropertySchema(
+      id: 1,
+      name: r'fibres',
+      type: IsarType.double,
     ),
     r'glucides': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'glucides',
-      type: IsarType.long,
+      type: IsarType.double,
     ),
     r'lipides': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'lipides',
-      type: IsarType.long,
+      type: IsarType.double,
     ),
     r'proteines': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'proteines',
-      type: IsarType.long,
+      type: IsarType.double,
     )
   },
   estimateSize: _nutritionGoalEstimateSize,
@@ -67,10 +72,11 @@ void _nutritionGoalSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.calories);
-  writer.writeLong(offsets[1], object.glucides);
-  writer.writeLong(offsets[2], object.lipides);
-  writer.writeLong(offsets[3], object.proteines);
+  writer.writeDouble(offsets[0], object.calories);
+  writer.writeDouble(offsets[1], object.fibres);
+  writer.writeDouble(offsets[2], object.glucides);
+  writer.writeDouble(offsets[3], object.lipides);
+  writer.writeDouble(offsets[4], object.proteines);
 }
 
 NutritionGoal _nutritionGoalDeserialize(
@@ -80,11 +86,12 @@ NutritionGoal _nutritionGoalDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NutritionGoal();
-  object.calories = reader.readLong(offsets[0]);
-  object.glucides = reader.readLong(offsets[1]);
+  object.calories = reader.readDouble(offsets[0]);
+  object.fibres = reader.readDoubleOrNull(offsets[1]);
+  object.glucides = reader.readDouble(offsets[2]);
   object.id = id;
-  object.lipides = reader.readLong(offsets[2]);
-  object.proteines = reader.readLong(offsets[3]);
+  object.lipides = reader.readDouble(offsets[3]);
+  object.proteines = reader.readDouble(offsets[4]);
   return object;
 }
 
@@ -96,13 +103,15 @@ P _nutritionGoalDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
+    case 4:
+      return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -205,49 +214,58 @@ extension NutritionGoalQueryWhere
 extension NutritionGoalQueryFilter
     on QueryBuilder<NutritionGoal, NutritionGoal, QFilterCondition> {
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
-      caloriesEqualTo(int value) {
+      caloriesEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       caloriesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       caloriesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       caloriesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -256,54 +274,148 @@ extension NutritionGoalQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
-      glucidesEqualTo(int value) {
+      fibresIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fibres',
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      fibresIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fibres',
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      fibresEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      fibresGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      fibresLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      fibresBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fibres',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
+      glucidesEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       glucidesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       glucidesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       glucidesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -312,6 +424,7 @@ extension NutritionGoalQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -371,49 +484,58 @@ extension NutritionGoalQueryFilter
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
-      lipidesEqualTo(int value) {
+      lipidesEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       lipidesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       lipidesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       lipidesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -422,54 +544,64 @@ extension NutritionGoalQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
-      proteinesEqualTo(int value) {
+      proteinesEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       proteinesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       proteinesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<NutritionGoal, NutritionGoal, QAfterFilterCondition>
       proteinesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -478,6 +610,7 @@ extension NutritionGoalQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -501,6 +634,18 @@ extension NutritionGoalQuerySortBy
       sortByCaloriesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'calories', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> sortByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> sortByFibresDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.desc);
     });
   }
 
@@ -555,6 +700,18 @@ extension NutritionGoalQuerySortThenBy
       thenByCaloriesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'calories', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> thenByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NutritionGoal, NutritionGoal, QAfterSortBy> thenByFibresDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.desc);
     });
   }
 
@@ -617,6 +774,12 @@ extension NutritionGoalQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NutritionGoal, NutritionGoal, QDistinct> distinctByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fibres');
+    });
+  }
+
   QueryBuilder<NutritionGoal, NutritionGoal, QDistinct> distinctByGlucides() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'glucides');
@@ -644,25 +807,31 @@ extension NutritionGoalQueryProperty
     });
   }
 
-  QueryBuilder<NutritionGoal, int, QQueryOperations> caloriesProperty() {
+  QueryBuilder<NutritionGoal, double, QQueryOperations> caloriesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'calories');
     });
   }
 
-  QueryBuilder<NutritionGoal, int, QQueryOperations> glucidesProperty() {
+  QueryBuilder<NutritionGoal, double?, QQueryOperations> fibresProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fibres');
+    });
+  }
+
+  QueryBuilder<NutritionGoal, double, QQueryOperations> glucidesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'glucides');
     });
   }
 
-  QueryBuilder<NutritionGoal, int, QQueryOperations> lipidesProperty() {
+  QueryBuilder<NutritionGoal, double, QQueryOperations> lipidesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lipides');
     });
   }
 
-  QueryBuilder<NutritionGoal, int, QQueryOperations> proteinesProperty() {
+  QueryBuilder<NutritionGoal, double, QQueryOperations> proteinesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'proteines');
     });
@@ -1284,38 +1453,43 @@ const MealEntrySchema = CollectionSchema(
     r'calories': PropertySchema(
       id: 0,
       name: r'calories',
-      type: IsarType.long,
+      type: IsarType.double,
     ),
     r'dailyLogId': PropertySchema(
       id: 1,
       name: r'dailyLogId',
       type: IsarType.long,
     ),
-    r'glucides': PropertySchema(
+    r'fibres': PropertySchema(
       id: 2,
+      name: r'fibres',
+      type: IsarType.double,
+    ),
+    r'glucides': PropertySchema(
+      id: 3,
       name: r'glucides',
-      type: IsarType.long,
+      type: IsarType.double,
     ),
     r'lipides': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lipides',
-      type: IsarType.long,
+      type: IsarType.double,
     ),
     r'mealType': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'mealType',
       type: IsarType.byte,
       enumMap: _MealEntrymealTypeEnumValueMap,
     ),
     r'notes': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'notes',
       type: IsarType.string,
     ),
     r'proteines': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'proteines',
-      type: IsarType.long,
+      type: IsarType.double,
     )
   },
   estimateSize: _mealEntryEstimateSize,
@@ -1367,13 +1541,14 @@ void _mealEntrySerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.calories);
+  writer.writeDouble(offsets[0], object.calories);
   writer.writeLong(offsets[1], object.dailyLogId);
-  writer.writeLong(offsets[2], object.glucides);
-  writer.writeLong(offsets[3], object.lipides);
-  writer.writeByte(offsets[4], object.mealType.index);
-  writer.writeString(offsets[5], object.notes);
-  writer.writeLong(offsets[6], object.proteines);
+  writer.writeDouble(offsets[2], object.fibres);
+  writer.writeDouble(offsets[3], object.glucides);
+  writer.writeDouble(offsets[4], object.lipides);
+  writer.writeByte(offsets[5], object.mealType.index);
+  writer.writeString(offsets[6], object.notes);
+  writer.writeDouble(offsets[7], object.proteines);
 }
 
 MealEntry _mealEntryDeserialize(
@@ -1383,16 +1558,17 @@ MealEntry _mealEntryDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = MealEntry();
-  object.calories = reader.readLong(offsets[0]);
+  object.calories = reader.readDouble(offsets[0]);
   object.dailyLogId = reader.readLongOrNull(offsets[1]);
-  object.glucides = reader.readLong(offsets[2]);
+  object.fibres = reader.readDoubleOrNull(offsets[2]);
+  object.glucides = reader.readDouble(offsets[3]);
   object.id = id;
-  object.lipides = reader.readLong(offsets[3]);
+  object.lipides = reader.readDouble(offsets[4]);
   object.mealType =
-      _MealEntrymealTypeValueEnumMap[reader.readByteOrNull(offsets[4])] ??
+      _MealEntrymealTypeValueEnumMap[reader.readByteOrNull(offsets[5])] ??
           MealType.petitDejeuner;
-  object.notes = reader.readStringOrNull(offsets[5]);
-  object.proteines = reader.readLong(offsets[6]);
+  object.notes = reader.readStringOrNull(offsets[6]);
+  object.proteines = reader.readDouble(offsets[7]);
   return object;
 }
 
@@ -1404,20 +1580,22 @@ P _mealEntryDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 1:
       return (reader.readLongOrNull(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 4:
+      return (reader.readDouble(offset)) as P;
+    case 5:
       return (_MealEntrymealTypeValueEnumMap[reader.readByteOrNull(offset)] ??
           MealType.petitDejeuner) as P;
-    case 5:
-      return (reader.readStringOrNull(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1646,46 +1824,54 @@ extension MealEntryQueryWhere
 extension MealEntryQueryFilter
     on QueryBuilder<MealEntry, MealEntry, QFilterCondition> {
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> caloriesEqualTo(
-      int value) {
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> caloriesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> caloriesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'calories',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> caloriesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -1694,6 +1880,7 @@ extension MealEntryQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1769,47 +1956,133 @@ extension MealEntryQueryFilter
     });
   }
 
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fibres',
+      ));
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fibres',
+      ));
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fibres',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> fibresBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fibres',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> glucidesEqualTo(
-      int value) {
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> glucidesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> glucidesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'glucides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> glucidesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -1818,6 +2091,7 @@ extension MealEntryQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1876,46 +2150,54 @@ extension MealEntryQueryFilter
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> lipidesEqualTo(
-      int value) {
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> lipidesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> lipidesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'lipides',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> lipidesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -1924,6 +2206,7 @@ extension MealEntryQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -2128,47 +2411,55 @@ extension MealEntryQueryFilter
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> proteinesEqualTo(
-      int value) {
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition>
       proteinesGreaterThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> proteinesLessThan(
-    int value, {
+    double value, {
     bool include = false,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'proteines',
         value: value,
+        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<MealEntry, MealEntry, QAfterFilterCondition> proteinesBetween(
-    int lower,
-    int upper, {
+    double lower,
+    double upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -2177,6 +2468,7 @@ extension MealEntryQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -2210,6 +2502,18 @@ extension MealEntryQuerySortBy on QueryBuilder<MealEntry, MealEntry, QSortBy> {
   QueryBuilder<MealEntry, MealEntry, QAfterSortBy> sortByDailyLogIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dailyLogId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterSortBy> sortByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterSortBy> sortByFibresDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.desc);
     });
   }
 
@@ -2300,6 +2604,18 @@ extension MealEntryQuerySortThenBy
     });
   }
 
+  QueryBuilder<MealEntry, MealEntry, QAfterSortBy> thenByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.asc);
+    });
+  }
+
+  QueryBuilder<MealEntry, MealEntry, QAfterSortBy> thenByFibresDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fibres', Sort.desc);
+    });
+  }
+
   QueryBuilder<MealEntry, MealEntry, QAfterSortBy> thenByGlucides() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'glucides', Sort.asc);
@@ -2387,6 +2703,12 @@ extension MealEntryQueryWhereDistinct
     });
   }
 
+  QueryBuilder<MealEntry, MealEntry, QDistinct> distinctByFibres() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fibres');
+    });
+  }
+
   QueryBuilder<MealEntry, MealEntry, QDistinct> distinctByGlucides() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'glucides');
@@ -2427,7 +2749,7 @@ extension MealEntryQueryProperty
     });
   }
 
-  QueryBuilder<MealEntry, int, QQueryOperations> caloriesProperty() {
+  QueryBuilder<MealEntry, double, QQueryOperations> caloriesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'calories');
     });
@@ -2439,13 +2761,19 @@ extension MealEntryQueryProperty
     });
   }
 
-  QueryBuilder<MealEntry, int, QQueryOperations> glucidesProperty() {
+  QueryBuilder<MealEntry, double?, QQueryOperations> fibresProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fibres');
+    });
+  }
+
+  QueryBuilder<MealEntry, double, QQueryOperations> glucidesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'glucides');
     });
   }
 
-  QueryBuilder<MealEntry, int, QQueryOperations> lipidesProperty() {
+  QueryBuilder<MealEntry, double, QQueryOperations> lipidesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lipides');
     });
@@ -2463,7 +2791,7 @@ extension MealEntryQueryProperty
     });
   }
 
-  QueryBuilder<MealEntry, int, QQueryOperations> proteinesProperty() {
+  QueryBuilder<MealEntry, double, QQueryOperations> proteinesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'proteines');
     });

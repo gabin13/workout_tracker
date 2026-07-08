@@ -598,13 +598,18 @@ const ProgramExerciseSchema = Schema(
       name: r'exerciseId',
       type: IsarType.long,
     ),
-    r'targetReps': PropertySchema(
+    r'orderIndex': PropertySchema(
       id: 1,
+      name: r'orderIndex',
+      type: IsarType.long,
+    ),
+    r'targetReps': PropertySchema(
+      id: 2,
       name: r'targetReps',
       type: IsarType.string,
     ),
     r'targetSets': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'targetSets',
       type: IsarType.long,
     )
@@ -637,8 +642,9 @@ void _programExerciseSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.exerciseId);
-  writer.writeString(offsets[1], object.targetReps);
-  writer.writeLong(offsets[2], object.targetSets);
+  writer.writeLong(offsets[1], object.orderIndex);
+  writer.writeString(offsets[2], object.targetReps);
+  writer.writeLong(offsets[3], object.targetSets);
 }
 
 ProgramExercise _programExerciseDeserialize(
@@ -649,8 +655,9 @@ ProgramExercise _programExerciseDeserialize(
 ) {
   final object = ProgramExercise();
   object.exerciseId = reader.readLong(offsets[0]);
-  object.targetReps = reader.readStringOrNull(offsets[1]);
-  object.targetSets = reader.readLongOrNull(offsets[2]);
+  object.orderIndex = reader.readLong(offsets[1]);
+  object.targetReps = reader.readStringOrNull(offsets[2]);
+  object.targetSets = reader.readLongOrNull(offsets[3]);
   return object;
 }
 
@@ -664,8 +671,10 @@ P _programExerciseDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -722,6 +731,62 @@ extension ProgramExerciseQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'exerciseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgramExercise, ProgramExercise, QAfterFilterCondition>
+      orderIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'orderIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgramExercise, ProgramExercise, QAfterFilterCondition>
+      orderIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'orderIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgramExercise, ProgramExercise, QAfterFilterCondition>
+      orderIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'orderIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ProgramExercise, ProgramExercise, QAfterFilterCondition>
+      orderIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'orderIndex',
         lower: lower,
         includeLower: includeLower,
         upper: upper,

@@ -7,12 +7,14 @@ class ProgramExercise {
   late int exerciseId;
   int? targetSets;
   String? targetReps; // String pour gérer des plages comme "8-10"
+  int orderIndex = 0; // Nouvel index pour le tri persistant
 
   Map<String, dynamic> toMap() {
     return {
       'exerciseId': exerciseId,
       'targetSets': targetSets,
       'targetReps': targetReps,
+      'orderIndex': orderIndex,
     };
   }
 
@@ -20,7 +22,8 @@ class ProgramExercise {
     return ProgramExercise()
       ..exerciseId = map['exerciseId']
       ..targetSets = map['targetSets']
-      ..targetReps = map['targetReps'];
+      ..targetReps = map['targetReps']
+      ..orderIndex = map['orderIndex'] ?? 0;
   }
 }
 

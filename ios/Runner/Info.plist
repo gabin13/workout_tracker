@@ -27,7 +27,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Cette application nécessite l'accès à la caméra pour enregistrer des photos de progression.</string>
+	<string>Nous avons besoin de la caméra pour scanner les codes-barres des aliments et enregistrer des photos de progression.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cette application nécessite l'accès à la galerie pour importer des photos de progression.</string>
 	<key>NSHealthShareUsageDescription</key>
