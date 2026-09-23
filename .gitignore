@@ -43,3 +43,5 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+# Subproject build dir (most outputs are redirected to root /build/)
+/android/build/
